@@ -37,6 +37,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\iRacingSdkWrapper\Samples\iRacingSimulator.Examples.WinformsLaptimeLogger\bin\Debug\iRacingSdkWrapper.dll</HintPath>
     </Reference>
+    <Reference Include="iRSDKSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\iRacingSdkWrapper\irsdkSharp\bin\Debug\iRSDKSharp.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
