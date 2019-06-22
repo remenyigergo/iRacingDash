@@ -67,6 +67,7 @@
             this.Delta_value = new System.Windows.Forms.Label();
             this.Pit_limiter_background_panel = new System.Windows.Forms.Panel();
             this.Pit_Limiter_title = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel3.SuspendLayout();
@@ -490,12 +491,23 @@
             this.Pit_Limiter_title.TabIndex = 0;
             this.Pit_Limiter_title.Text = "PIT LIMITER";
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.label2.Location = new System.Drawing.Point(169, 156);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(35, 13);
+            this.label2.TabIndex = 27;
+            this.label2.Text = "label2";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.ClientSize = new System.Drawing.Size(370, 304);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.Pit_limiter_background_panel);
             this.Controls.Add(this.panel8);
             this.Controls.Add(this.led3_3);
@@ -546,6 +558,7 @@
             this.Pit_limiter_background_panel.ResumeLayout(false);
             this.Pit_limiter_background_panel.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -589,6 +602,7 @@
         private System.Windows.Forms.Label Delta_value;
         private System.Windows.Forms.Panel Pit_limiter_background_panel;
         private System.Windows.Forms.Label Pit_Limiter_title;
+        private System.Windows.Forms.Label label2;
     }
 }
 
