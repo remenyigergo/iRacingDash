@@ -36,6 +36,7 @@ namespace iRacingDash
         private float lapCountPrevious = 0;
         private int manualLapCount = 0;
         private float trackLength = -9999;
+        private int meterThreshold = 5;
 
         //TIMER
         private string laptime = "0:00:00";
@@ -143,7 +144,7 @@ namespace iRacingDash
             distanceOnLap = e.TelemetryInfo.LapDist.Value;
             //minden körben tároljuk méterenként azt hol tartunk a pályán, és az időt hozzá
             //azt rakjuk globálba, amelyik a legjobb idő volt és mindig ahhoz nézzük majd a következő köröket.
-            if (e.TelemetryInfo.Lap.Value == currentLap && e.TelemetryInfo.Lap.Value - lapCountPrevious == 1 && currentLap >0) //ha a jelenlegi körben vagyunk
+            if (e.TelemetryInfo.Lap.Value == currentLap && e.TelemetryInfo.Lap.Value - lapCountPrevious == 1 && currentLap > 0) //ha a jelenlegi körben vagyunk
             {
                 //ha még nincs beállított session best, akkor az első mért körünket vesszük
                 //figyelni kellesz hogy valid lap volt-e. Azaz a CalculateLapTime-ban majd állítani kell egy global változót
@@ -151,7 +152,7 @@ namespace iRacingDash
                 {
                     var distInMeter = (int)Math.Round(e.TelemetryInfo.LapDist.Value);
                     label2.Text = distInMeter.ToString();
-                    if (distInMeter % 50 == 0 && distInMeter != 0)
+                    if (distInMeter % meterThreshold == 0 && distInMeter != 0)
                     {
                         var distInMilliseconds = lapTimeStopWatch.ElapsedMilliseconds;
                         if (!distancesInMeterAndTime.ContainsKey(distInMeter))
@@ -162,7 +163,7 @@ namespace iRacingDash
                         }
                     }
 
-                    if (distInMeter > trackLength-10 && manualLapCount == 1 && trackLength != -9999)
+                    if (distInMeter > trackLength - meterThreshold && manualLapCount == 1 && trackLength != -9999)
                     {
                         if (bestLapMeterAndTime.Count == 0)
                         {
@@ -170,7 +171,7 @@ namespace iRacingDash
                             distancesInMeterAndTime.Clear();
                         }
 
-                        
+
                     }
                 }
                 else
@@ -178,23 +179,76 @@ namespace iRacingDash
                     if (bestLapMeterAndTime.Count != 0)
                     {
                         var distInMeter = (int)Math.Round(e.TelemetryInfo.LapDist.Value);
-                        if (distInMeter % 50 == 0 && distInMeter != 0)
+                        if (distInMeter % meterThreshold == 0 && distInMeter != 0 && distInMeter < trackLength - meterThreshold)
                         {
                             var distInMilliseconds = (float)lapTimeStopWatch.ElapsedMilliseconds;
 
                             //összehasonlitjuk az adott méteren az időkülönbséget
-                            var meterAndMillisecondPair = bestLapMeterAndTime.First(pair => pair.Key == distInMeter).Value;
-                            float diff = (meterAndMillisecondPair - distInMilliseconds)/1000;
+                            var meterAndMillisecondPair = bestLapMeterAndTime.FirstOrDefault(pair => pair.Key == distInMeter);
+
+                            float diff = 0;
+                            if (meterAndMillisecondPair.Key > 0 && meterAndMillisecondPair.Value > 0 && distInMeter > 0)
+                            {
+                                diff = (distInMilliseconds - meterAndMillisecondPair.Value) / (float)1000.0;
+                            }
+                            else if(meterAndMillisecondPair.Key == 0 && meterAndMillisecondPair.Value == 0 && distInMeter > 0)
+                            { 
+                                //az előtte lévővel iratom ki ha nemtalálunk mért időt adott méterhez
+                                bool foundOne = false;
+                                int times = 1;
+                                while (!foundOne)
+                                {
+                                    meterAndMillisecondPair = bestLapMeterAndTime.FirstOrDefault(pair => pair.Key == distInMeter - 5*times);
+
+
+                                    if (meterAndMillisecondPair.Key != 0 && meterAndMillisecondPair.Value != 0)
+                                    {
+                                        diff = (distInMilliseconds - meterAndMillisecondPair.Value) / (float)1000.0;
+                                        foundOne = true;
+                                    }
+                                    else
+                                    {
+                                        times++;
+                                    }
+
+                                }
+                            }
+
 
                             //kiírjuk
-                            Delta_value.Text = diff.ToString();
+                            switch (diff > 0)
+                            {
+                                case true:
+                                    if (diff < 1)
+                                    {
+                                        Delta_value.Text = diff.ToString("+0.##");
+                                    }
+                                    else
+                                    {
+                                        Delta_value.Text = diff.ToString("+##.##");
+                                    }
+                                    
+                                    break;
+                                case false:
+                                    if (diff > -1)
+                                    {
+                                        Delta_value.Text = diff.ToString("0.##");
+                                    }
+                                    else
+                                    {
+                                        Delta_value.Text = diff.ToString("##.##");
+                                    }
+                                    
+                                    break;
+                            }
+                            
 
                             //tároljuk hogy letudjam copyzni a best lapre
                             if (!distancesInMeterAndTime.ContainsKey(distInMeter))
                             {
                                 distancesInMeterAndTime.Add(distInMeter, distInMilliseconds);
                             }
-                            
+
 
                             //if (itWasABestLap)
                             //{
@@ -254,7 +308,7 @@ namespace iRacingDash
 
         private void NewLapCalculation(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
-            
+
             UpdateLaptime(e);
             CalculateDelta(e);
             CalculateFuelUsagePerLap(e);
@@ -268,7 +322,7 @@ namespace iRacingDash
                 //új kör esetén
                 var actualFuelLevel = e.TelemetryInfo.FuelLevel.Value;
 
-                if (fuelLapStart != -1)
+                if (fuelLapStart != -1 && fuelLapStart-actualFuelLevel > 0)
                 {
                     fuelUsagePerLap.Add(fuelLapStart - actualFuelLevel);
                 }
@@ -588,7 +642,7 @@ namespace iRacingDash
         {
             StoreLastLapTime(e);
             maxFuelOfCar = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarFuelMaxLtr"].Value);
-            trackLength = float.Parse(e.SessionInfo["WeekendInfo"]["TrackLength"].Value.Substring(0,4))*1000;
+            trackLength = float.Parse(e.SessionInfo["WeekendInfo"]["TrackLength"].Value.Substring(0, 4)) * 1000;
         }
 
         private void StoreLastLapTime(SdkWrapper.SessionInfoUpdatedEventArgs e)
@@ -707,7 +761,7 @@ namespace iRacingDash
             }
             else
             {
-                Fuel_to_fill_value.Text = "0";
+                Fuel_to_fill_value.Text = "ENGH";
             }
         }
 
