@@ -37,6 +37,7 @@ namespace iRacingDash
         private int manualLapCount = 0;
         private float trackLength = -9999;
         private int meterThreshold = 5;
+        private bool isItRed = false;
 
         //TIMER
         private string laptime = "0:00:00";
@@ -101,7 +102,6 @@ namespace iRacingDash
             led3_3.Visible = false;
 
 
-
             //Close();
         }
 
@@ -112,8 +112,7 @@ namespace iRacingDash
             remainingTime = e.TelemetryInfo.SessionTimeRemain.Value;
             fuelLevel = e.TelemetryInfo.FuelLevel.Value;
             distanceFromFinishLine = e.TelemetryInfo.LapDist.Value;
-
-
+            //var fictionalObject = wrapper.GetTelemetryValue<int>("dcBrakeBias");
 
             //var engineWarnings = e.TelemetryInfo //need to test
             //Delta_value.Text = wrapper.GetTelemetryValue<float>("LapDeltaToBestLap").ToString();
@@ -151,7 +150,7 @@ namespace iRacingDash
                 if (bestLapMeterAndTime.Count == 0)
                 {
                     var distInMeter = (int)Math.Round(e.TelemetryInfo.LapDist.Value);
-                    label2.Text = distInMeter.ToString();
+                    //label2.Text = distInMeter.ToString();
                     if (distInMeter % meterThreshold == 0 && distInMeter != 0)
                     {
                         var distInMilliseconds = lapTimeStopWatch.ElapsedMilliseconds;
@@ -191,14 +190,14 @@ namespace iRacingDash
                             {
                                 diff = (distInMilliseconds - meterAndMillisecondPair.Value) / (float)1000.0;
                             }
-                            else if(meterAndMillisecondPair.Key == 0 && meterAndMillisecondPair.Value == 0 && distInMeter > 0)
-                            { 
+                            else if (meterAndMillisecondPair.Key == 0 && meterAndMillisecondPair.Value == 0 && distInMeter > 0)
+                            {
                                 //az előtte lévővel iratom ki ha nemtalálunk mért időt adott méterhez
                                 bool foundOne = false;
                                 int times = 1;
                                 while (!foundOne)
                                 {
-                                    meterAndMillisecondPair = bestLapMeterAndTime.FirstOrDefault(pair => pair.Key == distInMeter - 5*times);
+                                    meterAndMillisecondPair = bestLapMeterAndTime.FirstOrDefault(pair => pair.Key == distInMeter - 5 * times);
 
 
                                     if (meterAndMillisecondPair.Key != 0 && meterAndMillisecondPair.Value != 0)
@@ -227,7 +226,7 @@ namespace iRacingDash
                                     {
                                         Delta_value.Text = diff.ToString("+##.##");
                                     }
-                                    
+
                                     break;
                                 case false:
                                     if (diff > -1)
@@ -238,10 +237,10 @@ namespace iRacingDash
                                     {
                                         Delta_value.Text = diff.ToString("##.##");
                                     }
-                                    
+
                                     break;
                             }
-                            
+
 
                             //tároljuk hogy letudjam copyzni a best lapre
                             if (!distancesInMeterAndTime.ContainsKey(distInMeter))
@@ -322,16 +321,20 @@ namespace iRacingDash
                 //új kör esetén
                 var actualFuelLevel = e.TelemetryInfo.FuelLevel.Value;
 
-                if (fuelLapStart != -1 && fuelLapStart-actualFuelLevel > 0)
+                if (fuelLapStart != -1 && fuelLapStart - actualFuelLevel > 0)
                 {
                     fuelUsagePerLap.Add(fuelLapStart - actualFuelLevel);
                 }
 
+                
 
                 //fuelLapStart init
-                fuelLapStart = actualFuelLevel;
+                if (fuelLapStart == -1) 
+                    fuelLapStart = actualFuelLevel;
 
                 var lapStartEndFuelDifference = fuelLapStart - actualFuelLevel;
+                Last_lap_value.Text = lapStartEndFuelDifference.ToString("#.##");
+
                 //fuelLapStart = e.TelemetryInfo.FuelLevel.Value;
             }
         }
@@ -371,7 +374,7 @@ namespace iRacingDash
                 float thousandth = lapTimeStopWatch.ElapsedMilliseconds % 10;
 
                 //var s = String.Format("{0}{1}{2}", tenth, hundredth, thousandth);
-                string laptime = min + ":" + sec + "." + tenth + "" + hundredth + "" + thousandth;
+                string laptime = min + ":" + sec + ":" + tenth + "" + hundredth + "" + thousandth;
                 Laptime_value.Text = laptime;
             }
         }
@@ -499,7 +502,10 @@ namespace iRacingDash
 
 
                 //gear changes to white
-                gear.ForeColor = Color.White;
+                gear.ForeColor = Color.Black;
+
+                gear_panel.BackColor = Color.Gold;
+                gear.ForeColor = Color.Black;
             }
             //else
             //{
@@ -572,6 +578,9 @@ namespace iRacingDash
                 //gear changes to white
                 gear.ForeColor = Color.White;
 
+                gear_panel.BackColor = Color.Gold;
+                gear.ForeColor = Color.Black;
+
             }
 
 
@@ -629,12 +638,20 @@ namespace iRacingDash
 
                 //gear changes to red
                 gear.ForeColor = Color.Red;
+                gear_panel.BackColor = Color.Orange;
+
+                
+
             }
 
             if (rpmPercent > redLinePercent)
             {
                 //ha már villogni kell
                 //TODO
+
+                gear_panel.BackColor = Color.Red;
+                gear.ForeColor = Color.White;
+
             }
         }
 
@@ -729,7 +746,6 @@ namespace iRacingDash
             var avgFuelUsage = GetAverageFromList(fuelUsagePerLap);
             var avgLapTime = GetAverageFromList(laptimes);
 
-
             var remainingLapsWithFuel = fuelLevel / avgFuelUsage;
             if (HasValue(remainingLapsWithFuel))
                 Laps_estimate_value.Text = remainingLapsWithFuel.ToString("##.##");
@@ -762,6 +778,16 @@ namespace iRacingDash
             else
             {
                 Fuel_to_fill_value.Text = "ENGH";
+            }
+
+
+            if (fuelLevel < 10)
+            {
+                panel4.BackColor = Color.DarkRed;
+            }
+            else
+            {
+                panel4.BackColor = Color.FromArgb(0, 40, 40, 40);
             }
         }
 
