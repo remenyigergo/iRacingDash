@@ -11,12 +11,20 @@ using System.Windows.Forms;
 using iRacingSdkWrapper;
 using iRSDKSharp;
 
+//EngineWarnings : pits = 16, rpmMaximum = 32, normal = 0
 namespace iRacingDash
 {
     public partial class Form1 : Form
     {
+        private static DateTime now = DateTime.Now;
         private SdkWrapper wrapper;
         private iRacingSDK sdk;
+        private static string dateInString = now.ToString().Replace(' ', '-').Replace('/', '-').Replace(':', '-');
+        private Logger newLapLogger = new Logger(@"C:\Users\Greg\Documents\iRacingDash\logs\"+dateInString+"\\newLap.txt");
+        private Logger fuelUsageLogger = new Logger(@"C:\Users\Greg\Documents\iRacingDash\logs\"+dateInString+"\\fuelUsage.txt");
+        private Logger fuelComputeLogger = new Logger(@"C:\Users\Greg\Documents\iRacingDash\logs\"+dateInString+"\\fuelUsage.txt");
+
+
 
         //LEDS
         private float minRpmPercent = 50;
@@ -64,10 +72,10 @@ namespace iRacingDash
         private int sessionNumber;
         private float fuelLapStart = -1;
         private float fuelLapEnd;
-        private List<float> fuelUsagePerLap = new List<float>();
+        private List<double> fuelUsagePerLap = new List<double>();
 
         //köridők
-        List<float> laptimes = new List<float>();
+        List<double> laptimes = new List<double>();
         float currentLap;
         bool itWasABestLap = false;
         private Dictionary<int, float> bestlap = new Dictionary<int, float>();
@@ -83,8 +91,26 @@ namespace iRacingDash
 
             sdk = new iRacingSDK();
             wrapper = new SdkWrapper();
+
+            //CONFIGS
+            //Car RPM
+            var s = new Configurator();
+            maxRpm = s.Configurate("car", "config", "MaxRpm");
+
+            //Window setup
+            var X = s.Configurate("window", "config", "PositionX");
+            var Y = s.Configurate("window", "config", "PositionY");
+            this.Location = new Point((int)X,(int)Y);
+
+            //ShiftLights setup
+            minRpmPercent = s.Configurate("led", "config", "MinimumRPMPercent");
+            shiftLight1Percent = s.Configurate("led", "config", "ShiftLightGreenPercent");
+            shiftLight2Percent = s.Configurate("led", "config", "ShiftLightYellowPercent");
+            redLinePercent = s.Configurate("led", "config", "ShiftLightRedPercent");
+
+
             wrapper.Start();
-            wrapper.TelemetryUpdateFrequency = 60;
+            wrapper.TelemetryUpdateFrequency = 30;
             wrapper.TelemetryUpdated += OnTelemetryUpdated;
             wrapper.SessionInfoUpdated += OnSessionInfoUpdated;
 
@@ -101,8 +127,8 @@ namespace iRacingDash
             led3_2.Visible = false;
             led3_3.Visible = false;
 
+            Laptime_value.ForeColor = Color.LawnGreen;
 
-            //Close();
         }
 
         private void OnTelemetryUpdated(object sender, SdkWrapper.TelemetryUpdatedEventArgs e)
@@ -113,7 +139,12 @@ namespace iRacingDash
             fuelLevel = e.TelemetryInfo.FuelLevel.Value;
             distanceFromFinishLine = e.TelemetryInfo.LapDist.Value;
             //var fictionalObject = wrapper.GetTelemetryValue<int>("dcBrakeBias");
-
+            var brakebias = wrapper.GetData("dcBrakeBias");
+            Brake_bias_value.Text = Convert.ToDouble(brakebias).ToString("##.##");
+            traction1_value.Text = Convert.ToInt32(wrapper.GetData("dcTractionControl")).ToString();
+            traction2_value.Text = Convert.ToInt32(wrapper.GetData("dcTractionControl2")).ToString();
+            
+             
             //var engineWarnings = e.TelemetryInfo //need to test
             //Delta_value.Text = wrapper.GetTelemetryValue<float>("LapDeltaToBestLap").ToString();
 
@@ -124,7 +155,8 @@ namespace iRacingDash
             UpdateRpmLights(e);
             NewLapCalculation(e);
             CalculateGear(e);
-            InPits(e);
+            //InPits(e);
+            InPitsV2(e);
 
 
 
@@ -169,8 +201,6 @@ namespace iRacingDash
                             bestLapMeterAndTime = new Dictionary<int, float>(distancesInMeterAndTime);
                             distancesInMeterAndTime.Clear();
                         }
-
-
                     }
                 }
                 else
@@ -264,6 +294,49 @@ namespace iRacingDash
             }
         }
 
+        private void InPitsV2(SdkWrapper.TelemetryUpdatedEventArgs e)
+        {
+            var engineWarning = wrapper.GetData("EngineWarnings");
+            var limiter = Convert.ToInt32(engineWarning);
+
+            var onPitRoad = Convert.ToBoolean(wrapper.GetData("OnPitRoad"));
+
+            if (limiter == 16 || limiter == 48) //16 = pit limiter
+            {
+                if (onPitRoad)
+                {
+                    Pit_Limiter_title.Visible = true;
+                }
+                else
+                {
+                    Pit_Limiter_title.Visible = false;
+                }
+
+                speed_limiter.Visible = true;
+                Pit_limiter_background_panel.Visible = true;
+            }
+            else
+            {
+                if (onPitRoad)
+                {
+                    Pit_Limiter_title.Visible = true;
+                }
+                else
+                {
+                    Pit_Limiter_title.Visible = false;
+                }
+
+                Pit_Limiter_title.Visible = false;
+                Pit_limiter_background_panel.Visible = false;
+            }
+
+            //if (Convert.ToInt32(engineWarning) == 32) 
+            //{
+            //    //RPM MAX!
+
+            //}
+        }
+
         private void InPits(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
             var onpitroad = e.TelemetryInfo.CarIdxOnPitRoad.Value;
@@ -308,10 +381,88 @@ namespace iRacingDash
         private void NewLapCalculation(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
 
-            UpdateLaptime(e);
-            CalculateDelta(e);
+            NewLapSettings(e);
+            //UpdateLaptime(e);
+            UpdateLapTimeV2(e);
+            //CalculateDelta(e);
+            CalculateDeltaV2(e);
             CalculateFuelUsagePerLap(e);
             CalculateFuel(e);
+        }
+
+        private void NewLapSettings(SdkWrapper.TelemetryUpdatedEventArgs e)
+        {
+            var lapDist = e.TelemetryInfo.LapDist.Value;
+            lapCount = e.TelemetryInfo.Lap.Value;
+
+            //init lapcountTemp
+            if (lapCountTemp == -1)
+            {
+                lapCountTemp = lapCount;
+                currentLap = lapCount;
+
+                this.newLapLogger.Log("Init","lapCountTemp: "+lapCountTemp + Environment.NewLine + "  currentLap: "+currentLap);
+            }
+
+            if (lapCount - lapCountTemp == 1)
+            {
+                var lapTime = wrapper.GetData("LapLastLapTime");
+                var lapTimeConverted = Convert.ToDouble(lapTime);
+                if (lapTimeConverted != 0 && lapTimeConverted!= -1)
+                {
+                    laptimes.Add(lapTimeConverted);
+                }
+
+                //laptimes.Add(lapTime);
+                lapCountPrevious = currentLap;
+                currentLap = lapCount;
+
+                newLapLogger.Log("In a new lap","lapTimeConverted: " + lapTimeConverted+ Environment.NewLine + "  lapCountPrevious: "+lapCountPrevious+ Environment.NewLine + "  currentLap: "+currentLap);
+            }
+        }
+
+        private void CalculateDeltaV2(SdkWrapper.TelemetryUpdatedEventArgs e)
+        {
+            var deltaObject = wrapper.GetData("LapDeltaToSessionBestLap");
+            var deltaInt = Convert.ToDouble(deltaObject);
+
+
+
+            if (deltaInt > 0)
+            {
+                if (deltaInt < 1)
+                {
+                    Delta_value.Text = deltaInt.ToString("+0" + ".##");
+                }
+                else
+                {
+                    Delta_value.Text = deltaInt.ToString("+##.##");
+                }
+
+            } else
+
+            if (deltaInt < 0)
+            {
+                if (deltaInt > -1)
+                {
+                    Delta_value.Text = deltaInt.ToString("0" + ".##");
+                }
+                else
+                {
+                    Delta_value.Text = deltaInt.ToString("##.##");
+                }
+
+            } else
+
+            if (deltaInt == 0)
+            {
+                Delta_value.Text = deltaInt.ToString("0.00");
+            } else
+            if (deltaInt % 1 == 0)
+            {
+                Delta_value.Text = deltaInt.ToString("0.00");
+            }
+            
         }
 
         private void CalculateFuelUsagePerLap(SdkWrapper.TelemetryUpdatedEventArgs e)
@@ -326,16 +477,40 @@ namespace iRacingDash
                     fuelUsagePerLap.Add(fuelLapStart - actualFuelLevel);
                 }
 
-                
+
 
                 //fuelLapStart init
-                if (fuelLapStart == -1) 
+                if (fuelLapStart == -1)
+                {
                     fuelLapStart = actualFuelLevel;
+                    fuelUsageLogger.Log("Init", "Lap number:  " + lapCount + Environment.NewLine + "  fuelLapStart: " + fuelLapStart);
+                    return;
+                }
+                     
 
                 var lapStartEndFuelDifference = fuelLapStart - actualFuelLevel;
-                Last_lap_value.Text = lapStartEndFuelDifference.ToString("#.##");
+                fuelUsageLogger.Log("Difference", "Lap number: " + lapCount + Environment.NewLine + "  lapStartEndFuelDifference: " + lapStartEndFuelDifference + Environment.NewLine 
+                    + "  fuelLapStart: "+fuelLapStart + Environment.NewLine + "  actualFuelLevel: "+actualFuelLevel);
 
-                //fuelLapStart = e.TelemetryInfo.FuelLevel.Value;
+                if (lapStartEndFuelDifference == 0)
+                {
+                    Last_lap_value.Text = "N/A";
+                }
+                else
+                {
+                    if (lapStartEndFuelDifference < 1 && lapStartEndFuelDifference > 0)
+                    {
+                        Last_lap_value.Text = lapStartEndFuelDifference.ToString("0.##");
+                    } else if (lapStartEndFuelDifference > 1)
+                    {
+                        Last_lap_value.Text = lapStartEndFuelDifference.ToString("#.##");
+                    }
+                    
+                }
+
+                fuelLapStart = actualFuelLevel;
+
+                
             }
         }
 
@@ -379,6 +554,28 @@ namespace iRacingDash
             }
         }
 
+        private void UpdateLapTimeV2(SdkWrapper.TelemetryUpdatedEventArgs e)
+        {
+            var lapObject = wrapper.GetData("LapCurrentLapTime");
+            var lap = Convert.ToDouble(lapObject);
+
+            int min = (int)(lap / 60);
+            int sec = (int)(lap % 60);
+
+
+            double decimalPart = lap - Math.Truncate(lap);
+            string laptime;
+            if (decimalPart > 0)
+            {
+                laptime = min.ToString("00") + ":" + sec.ToString("00") + "." + decimalPart.ToString().Substring(2, 3);
+            }
+            else
+            {
+                laptime = min.ToString("00") + ":" + sec.ToString("00") + "." + decimalPart.ToString("000");
+            }
+            
+            Laptime_value.Text = laptime;
+        }
 
         private void UpdateRpmLights(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
@@ -640,7 +837,7 @@ namespace iRacingDash
                 gear.ForeColor = Color.Red;
                 gear_panel.BackColor = Color.Orange;
 
-                
+
 
             }
 
@@ -657,7 +854,7 @@ namespace iRacingDash
 
         private void OnSessionInfoUpdated(object sender, SdkWrapper.SessionInfoUpdatedEventArgs e)
         {
-            StoreLastLapTime(e);
+            //StoreLastLapTime(e);
             maxFuelOfCar = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarFuelMaxLtr"].Value);
             trackLength = float.Parse(e.SessionInfo["WeekendInfo"]["TrackLength"].Value.Substring(0, 4)) * 1000;
         }
@@ -764,7 +961,7 @@ namespace iRacingDash
 
                 if (HasValue(floorLapsToFill) && HasValue(fillForLeftover))
                 {
-                    var toFill = (floorLapsToFill * avgFuelUsage) + fillForLeftover;
+                    var toFill = (floorLapsToFill * avgFuelUsage) + fillForLeftover + Math.Ceiling(avgFuelUsage);
                     if (toFill > maxFuelOfCar)
                     {
                         Fuel_to_fill_value.Text = maxFuelOfCar.ToString("##.##");
@@ -797,9 +994,9 @@ namespace iRacingDash
             return !Double.IsNaN(value) && !Double.IsInfinity(value);
         }
 
-        private float GetAverageFromList(List<float> list)
+        private double GetAverageFromList(List<double> list)
         {
-            var max = 0.0f;
+            var max = 0.0d;
             foreach (var value in list)
             {
                 max += value;
@@ -809,7 +1006,12 @@ namespace iRacingDash
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            this.Location = new Point(1200, 600);
+            this.Location = new Point(0, 0);
+        }
+
+        private void Form1_DoubleClick(object sender, EventArgs e)
+        {
+            Environment.Exit(0);
         }
     }
 }

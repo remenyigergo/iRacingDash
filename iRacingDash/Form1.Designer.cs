@@ -35,7 +35,7 @@
             this.Laps_estimate_value = new System.Windows.Forms.Label();
             this.Fuel_remain_title = new System.Windows.Forms.Label();
             this.Fuel_remain_value = new System.Windows.Forms.Label();
-            this.Automatic_value = new System.Windows.Forms.Label();
+            this.Brake_bias_value = new System.Windows.Forms.Label();
             this.Laptime_value = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
@@ -65,6 +65,7 @@
             this.Delta_value = new System.Windows.Forms.Label();
             this.Pit_limiter_background_panel = new System.Windows.Forms.Panel();
             this.Pit_Limiter_title = new System.Windows.Forms.Label();
+            this.speed_limiter = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.pictureBox3 = new System.Windows.Forms.PictureBox();
@@ -77,10 +78,15 @@
             this.pictureBox10 = new System.Windows.Forms.PictureBox();
             this.pictureBox11 = new System.Windows.Forms.PictureBox();
             this.pictureBox12 = new System.Windows.Forms.PictureBox();
-            this.Brake_bias_value = new System.Windows.Forms.Label();
             this.panel6 = new System.Windows.Forms.Panel();
             this.Last_lap_title = new System.Windows.Forms.Label();
             this.Last_lap_value = new System.Windows.Forms.Label();
+            this.panel9 = new System.Windows.Forms.Panel();
+            this.traction1_title = new System.Windows.Forms.Label();
+            this.traction1_value = new System.Windows.Forms.Label();
+            this.panel10 = new System.Windows.Forms.Panel();
+            this.traction2_title = new System.Windows.Forms.Label();
+            this.traction2_value = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel3.SuspendLayout();
@@ -115,6 +121,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox11)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox12)).BeginInit();
             this.panel6.SuspendLayout();
+            this.panel9.SuspendLayout();
+            this.panel10.SuspendLayout();
             this.SuspendLayout();
             // 
             // Speed_title
@@ -190,17 +198,17 @@
             this.Fuel_remain_value.Text = "N/A";
             this.Fuel_remain_value.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
-            // Automatic_value
+            // Brake_bias_value
             // 
-            this.Automatic_value.Dock = System.Windows.Forms.DockStyle.Top;
-            this.Automatic_value.Font = new System.Drawing.Font("Microsoft YaHei", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.Automatic_value.ForeColor = System.Drawing.Color.White;
-            this.Automatic_value.Location = new System.Drawing.Point(0, 0);
-            this.Automatic_value.Name = "Automatic_value";
-            this.Automatic_value.Size = new System.Drawing.Size(98, 37);
-            this.Automatic_value.TabIndex = 7;
-            this.Automatic_value.Text = "N/A";
-            this.Automatic_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.Brake_bias_value.Dock = System.Windows.Forms.DockStyle.Top;
+            this.Brake_bias_value.Font = new System.Drawing.Font("Microsoft YaHei", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.Brake_bias_value.ForeColor = System.Drawing.Color.Aqua;
+            this.Brake_bias_value.Location = new System.Drawing.Point(0, 0);
+            this.Brake_bias_value.Name = "Brake_bias_value";
+            this.Brake_bias_value.Size = new System.Drawing.Size(98, 37);
+            this.Brake_bias_value.TabIndex = 7;
+            this.Brake_bias_value.Text = "N/A";
+            this.Brake_bias_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // Laptime_value
             // 
@@ -209,7 +217,7 @@
             this.Laptime_value.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
             this.Laptime_value.Location = new System.Drawing.Point(0, 0);
             this.Laptime_value.Name = "Laptime_value";
-            this.Laptime_value.Size = new System.Drawing.Size(124, 48);
+            this.Laptime_value.Size = new System.Drawing.Size(145, 48);
             this.Laptime_value.TabIndex = 9;
             this.Laptime_value.Text = "0:00.000";
             this.Laptime_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -220,7 +228,7 @@
             this.panel1.Controls.Add(this.Laptime_value);
             this.panel1.Location = new System.Drawing.Point(7, 72);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(126, 50);
+            this.panel1.Size = new System.Drawing.Size(147, 50);
             this.panel1.TabIndex = 10;
             // 
             // panel2
@@ -239,12 +247,12 @@
             // 
             this.label1.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.label1.Font = new System.Drawing.Font("Microsoft YaHei", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label1.ForeColor = System.Drawing.Color.Yellow;
+            this.label1.ForeColor = System.Drawing.Color.Aqua;
             this.label1.Location = new System.Drawing.Point(0, 29);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(98, 19);
             this.label1.TabIndex = 12;
-            this.label1.Text = "Automatic";
+            this.label1.Text = "BrkBias";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // panel3
@@ -252,7 +260,7 @@
             this.panel3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
             this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel3.Controls.Add(this.label1);
-            this.panel3.Controls.Add(this.Automatic_value);
+            this.panel3.Controls.Add(this.Brake_bias_value);
             this.panel3.ForeColor = System.Drawing.SystemColors.ControlText;
             this.panel3.Location = new System.Drawing.Point(7, 240);
             this.panel3.Name = "panel3";
@@ -284,6 +292,7 @@
             // rpm
             // 
             this.rpm.Dock = System.Windows.Forms.DockStyle.Top;
+            this.rpm.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.rpm.ForeColor = System.Drawing.Color.Black;
             this.rpm.Location = new System.Drawing.Point(0, 0);
             this.rpm.Name = "rpm";
@@ -296,7 +305,7 @@
             // 
             this.gear.Font = new System.Drawing.Font("Microsoft YaHei", 72F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.gear.ForeColor = System.Drawing.Color.Black;
-            this.gear.Location = new System.Drawing.Point(15, -6);
+            this.gear.Location = new System.Drawing.Point(15, -8);
             this.gear.Name = "gear";
             this.gear.Size = new System.Drawing.Size(95, 116);
             this.gear.TabIndex = 0;
@@ -463,7 +472,7 @@
             this.panel8.ForeColor = System.Drawing.SystemColors.ControlText;
             this.panel8.Location = new System.Drawing.Point(7, 127);
             this.panel8.Name = "panel8";
-            this.panel8.Size = new System.Drawing.Size(126, 50);
+            this.panel8.Size = new System.Drawing.Size(147, 50);
             this.panel8.TabIndex = 11;
             // 
             // Delta_value
@@ -473,7 +482,7 @@
             this.Delta_value.ForeColor = System.Drawing.Color.White;
             this.Delta_value.Location = new System.Drawing.Point(0, 0);
             this.Delta_value.Name = "Delta_value";
-            this.Delta_value.Size = new System.Drawing.Size(124, 50);
+            this.Delta_value.Size = new System.Drawing.Size(145, 50);
             this.Delta_value.TabIndex = 9;
             this.Delta_value.Text = "N/A";
             this.Delta_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -482,8 +491,9 @@
             // 
             this.Pit_limiter_background_panel.BackColor = System.Drawing.Color.Orange;
             this.Pit_limiter_background_panel.Controls.Add(this.Pit_Limiter_title);
+            this.Pit_limiter_background_panel.Controls.Add(this.speed_limiter);
             this.Pit_limiter_background_panel.ForeColor = System.Drawing.Color.Orange;
-            this.Pit_limiter_background_panel.Location = new System.Drawing.Point(0, 65);
+            this.Pit_limiter_background_panel.Location = new System.Drawing.Point(0, 66);
             this.Pit_limiter_background_panel.Name = "Pit_limiter_background_panel";
             this.Pit_limiter_background_panel.Size = new System.Drawing.Size(377, 58);
             this.Pit_limiter_background_panel.TabIndex = 26;
@@ -492,14 +502,27 @@
             // Pit_Limiter_title
             // 
             this.Pit_Limiter_title.AutoSize = true;
-            this.Pit_Limiter_title.Font = new System.Drawing.Font("Microsoft YaHei", 23F, System.Drawing.FontStyle.Bold);
+            this.Pit_Limiter_title.BackColor = System.Drawing.Color.Transparent;
+            this.Pit_Limiter_title.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Bold);
             this.Pit_Limiter_title.ForeColor = System.Drawing.Color.Black;
-            this.Pit_Limiter_title.Location = new System.Drawing.Point(118, 11);
+            this.Pit_Limiter_title.Location = new System.Drawing.Point(154, -1);
             this.Pit_Limiter_title.Name = "Pit_Limiter_title";
-            this.Pit_Limiter_title.Size = new System.Drawing.Size(130, 40);
+            this.Pit_Limiter_title.Size = new System.Drawing.Size(70, 22);
             this.Pit_Limiter_title.TabIndex = 0;
             this.Pit_Limiter_title.Text = "IN PITS";
             this.Pit_Limiter_title.Visible = false;
+            // 
+            // speed_limiter
+            // 
+            this.speed_limiter.AutoSize = true;
+            this.speed_limiter.BackColor = System.Drawing.Color.Transparent;
+            this.speed_limiter.Font = new System.Drawing.Font("Microsoft YaHei", 23F, System.Drawing.FontStyle.Bold);
+            this.speed_limiter.ForeColor = System.Drawing.Color.Black;
+            this.speed_limiter.Location = new System.Drawing.Point(28, 17);
+            this.speed_limiter.Name = "speed_limiter";
+            this.speed_limiter.Size = new System.Drawing.Size(312, 40);
+            this.speed_limiter.TabIndex = 1;
+            this.speed_limiter.Text = "PIT SPEED LIMITER";
             // 
             // pictureBox1
             // 
@@ -609,16 +632,6 @@
             this.pictureBox12.TabIndex = 28;
             this.pictureBox12.TabStop = false;
             // 
-            // Brake_bias_value
-            // 
-            this.Brake_bias_value.AutoSize = true;
-            this.Brake_bias_value.ForeColor = System.Drawing.Color.White;
-            this.Brake_bias_value.Location = new System.Drawing.Point(167, 145);
-            this.Brake_bias_value.Name = "Brake_bias_value";
-            this.Brake_bias_value.Size = new System.Drawing.Size(27, 13);
-            this.Brake_bias_value.TabIndex = 40;
-            this.Brake_bias_value.Text = "N/A";
-            // 
             // panel6
             // 
             this.panel6.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -653,14 +666,87 @@
             this.Last_lap_value.Text = "N/A";
             this.Last_lap_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // panel9
+            // 
+            this.panel9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
+            this.panel9.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel9.Controls.Add(this.traction1_title);
+            this.panel9.Controls.Add(this.traction1_value);
+            this.panel9.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.panel9.Location = new System.Drawing.Point(157, 72);
+            this.panel9.Name = "panel9";
+            this.panel9.Size = new System.Drawing.Size(78, 50);
+            this.panel9.TabIndex = 13;
+            // 
+            // traction1_title
+            // 
+            this.traction1_title.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.traction1_title.Font = new System.Drawing.Font("Microsoft YaHei", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.traction1_title.ForeColor = System.Drawing.Color.OrangeRed;
+            this.traction1_title.Location = new System.Drawing.Point(0, 29);
+            this.traction1_title.Name = "traction1_title";
+            this.traction1_title.Size = new System.Drawing.Size(76, 19);
+            this.traction1_title.TabIndex = 0;
+            this.traction1_title.Text = "TC1";
+            this.traction1_title.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // traction1_value
+            // 
+            this.traction1_value.Dock = System.Windows.Forms.DockStyle.Top;
+            this.traction1_value.Font = new System.Drawing.Font("Microsoft YaHei", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.traction1_value.ForeColor = System.Drawing.Color.OrangeRed;
+            this.traction1_value.Location = new System.Drawing.Point(0, 0);
+            this.traction1_value.Name = "traction1_value";
+            this.traction1_value.Size = new System.Drawing.Size(76, 36);
+            this.traction1_value.TabIndex = 1;
+            this.traction1_value.Text = "N/A";
+            this.traction1_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // panel10
+            // 
+            this.panel10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
+            this.panel10.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel10.Controls.Add(this.traction2_title);
+            this.panel10.Controls.Add(this.traction2_value);
+            this.panel10.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.panel10.Location = new System.Drawing.Point(156, 127);
+            this.panel10.Name = "panel10";
+            this.panel10.Size = new System.Drawing.Size(78, 50);
+            this.panel10.TabIndex = 14;
+            // 
+            // traction2_title
+            // 
+            this.traction2_title.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.traction2_title.Font = new System.Drawing.Font("Microsoft YaHei", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.traction2_title.ForeColor = System.Drawing.Color.OrangeRed;
+            this.traction2_title.Location = new System.Drawing.Point(0, 29);
+            this.traction2_title.Name = "traction2_title";
+            this.traction2_title.Size = new System.Drawing.Size(76, 19);
+            this.traction2_title.TabIndex = 12;
+            this.traction2_title.Text = "TC2";
+            this.traction2_title.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // traction2_value
+            // 
+            this.traction2_value.Dock = System.Windows.Forms.DockStyle.Top;
+            this.traction2_value.Font = new System.Drawing.Font("Microsoft YaHei", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.traction2_value.ForeColor = System.Drawing.Color.OrangeRed;
+            this.traction2_value.Location = new System.Drawing.Point(0, 0);
+            this.traction2_value.Name = "traction2_value";
+            this.traction2_value.Size = new System.Drawing.Size(76, 37);
+            this.traction2_value.TabIndex = 7;
+            this.traction2_value.Text = "N/A";
+            this.traction2_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
             this.ClientSize = new System.Drawing.Size(370, 299);
-            this.Controls.Add(this.Brake_bias_value);
             this.Controls.Add(this.Pit_limiter_background_panel);
+            this.Controls.Add(this.panel9);
+            this.Controls.Add(this.panel10);
             this.Controls.Add(this.panel8);
             this.Controls.Add(this.led3_3);
             this.Controls.Add(this.led3_2);
@@ -700,6 +786,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "iRacingDash";
             this.TopMost = true;
+            this.DoubleClick += new System.EventHandler(this.Form1_DoubleClick);
             this.panel1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
             this.panel3.ResumeLayout(false);
@@ -735,8 +822,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox11)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox12)).EndInit();
             this.panel6.ResumeLayout(false);
+            this.panel9.ResumeLayout(false);
+            this.panel10.ResumeLayout(false);
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -748,7 +836,7 @@
         private System.Windows.Forms.Label Laps_estimate_value;
         private System.Windows.Forms.Label Fuel_remain_title;
         private System.Windows.Forms.Label Fuel_remain_value;
-        private System.Windows.Forms.Label Automatic_value;
+        private System.Windows.Forms.Label Brake_bias_value;
         private System.Windows.Forms.Label Laptime_value;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
@@ -790,10 +878,16 @@
         private System.Windows.Forms.PictureBox pictureBox10;
         private System.Windows.Forms.PictureBox pictureBox11;
         private System.Windows.Forms.PictureBox pictureBox12;
-        private System.Windows.Forms.Label Brake_bias_value;
         private System.Windows.Forms.Panel panel6;
         private System.Windows.Forms.Label Last_lap_title;
         private System.Windows.Forms.Label Last_lap_value;
+        private System.Windows.Forms.Label speed_limiter;
+        private System.Windows.Forms.Panel panel9;
+        private System.Windows.Forms.Label traction1_title;
+        private System.Windows.Forms.Label traction1_value;
+        private System.Windows.Forms.Panel panel10;
+        private System.Windows.Forms.Label traction2_title;
+        private System.Windows.Forms.Label traction2_value;
     }
 }
 
