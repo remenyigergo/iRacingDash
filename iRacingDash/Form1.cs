@@ -25,8 +25,7 @@ namespace iRacingDash
         public static string dateInString = now.ToString().Replace(' ', '-').Replace('/', '-').Replace(':', '-');
         private Logger newLapLogger;
         private Logger fuelUsageLogger;
-        //private Logger fuelComputeLogger = new Logger(logPath + dateInString + "\\fuelCompute.txt"); TODO
-
+        private Logger fuelComputeLogger;
 
         //LEDS
         private float minRpmPercent;
@@ -38,29 +37,15 @@ namespace iRacingDash
         private int DriverCarIdx = -9999;
 
         private float maxRpm;
-        //private float distanceFromFinishLine;
-        //private float distanceFromFinishLine_Previous;
         private int lapCount = 0;
         private int lapCountTemp = -1;
         private float lapCountPrevious = 0;
-        //private int manualLapCount = 0;
         private float trackLength = -9999;
-        //private int meterThreshold = 5;
         private int position;
 
+        private int NonRTCalculationFPS = s.Configurate<int>("fps", "config", "NonRealtimeCalculationsFps");
+        private int fpsCounter = 0;
 
-        ////TIMER
-        //Stopwatch lapTimeStopWatch = new Stopwatch();
-
-        ////DELTA
-        //private List<int> distanceOnLapList = new List<int>();
-        //private List<int> timeDistanceOnLapList = new List<int>();
-
-        //Dictionary<int, float> bestLapMeterAndTime = new Dictionary<int, float>();
-        //Dictionary<int, float> distancesInMeterAndTime = new Dictionary<int, float>();
-        //private float distanceOnLap = 0;
-        //private float timeDistanceOnLap = 0;
-        //private float timeDistanceOnLapTemp = 0;
 
         //*FUEL
         private float maxFuelOfCar = 0;
@@ -82,10 +67,6 @@ namespace iRacingDash
         //köridők
         List<double> laptimes = new List<double>();
         float currentLap;
-
-        //bool itWasABestLap = false;
-        //private Dictionary<int, float> bestlap = new Dictionary<int, float>();
-        //bool lapStarted = false;
 
 
         public Form1()
@@ -113,7 +94,7 @@ namespace iRacingDash
 
 
             wrapper.Start();
-            wrapper.TelemetryUpdateFrequency = 30;
+            wrapper.TelemetryUpdateFrequency = s.Configurate<int>("fps", "config", "TelemetryFps");
             wrapper.TelemetryUpdated += OnTelemetryUpdated;
             wrapper.SessionInfoUpdated += OnSessionInfoUpdated;
 
@@ -136,225 +117,120 @@ namespace iRacingDash
 
         }
 
-        private void OnTelemetryUpdated(object sender, SdkWrapper.TelemetryUpdatedEventArgs e)
+
+        //InPitsV2, BrakeBias, Gear, Fuel, TC
+        private void NonRealtimeCalculations(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
+            
+            fpsCounter = 0;
+            
+            InPitsV2(e);
+            CalculateGear(e);
+            CalculateFuelUsagePerLap(e);
+            CalculateFuel(e);
 
-            //Folyamatosan frissülő adatok
-            sessionNumber = e.TelemetryInfo.SessionNum.Value;
+            #region Brake bias
+            var brakebias = wrapper.GetData("dcBrakeBias");
+            Brake_bias_value.Text = string.Format("{0:00.00}", Convert.ToDouble(brakebias));
+            #endregion
 
-            if (sessionNumberTemp == -1)
+            remainingTime = e.TelemetryInfo.SessionTimeRemain.Value;
+            fuelLevel = e.TelemetryInfo.FuelLevel.Value;
+            Fuel_remain_value.Text = string.Format("{0:00.00}",fuelLevel);
+            //fuelLevel.ToString("##.##");
+
+            if (DriverCarIdx != -9999)
+                position = e.TelemetryInfo.CarIdxPosition.Value[DriverCarIdx];
+
+            try
             {
-                //init sessionNum
-                sessionNumberTemp = sessionNumber;
+                traction1_value.Text = Convert.ToInt32(wrapper.GetData("dcTractionControl")).ToString();
+                traction2_value.Text = Convert.ToInt32(wrapper.GetData("dcTractionControl2")).ToString();
             }
-
-
-            if (sessionNumberTemp != sessionNumber || subSessionNumber != subSessionNumberTemp)
+            catch (Exception ex)
             {
-                //resetting variables
-                lapCount = 0;
-                lapCountTemp = -1;
-                lapCountPrevious = 0;
-
-                fuelLapStart = -1;
-                fuelUsagePerLap = new List<double>();
-                DriverCarIdx = -9999;
-                remainingTime = 0;
-                fuelLevel = 0;
-                trackLength = -9999;
-
-
-                Fuel_to_fill_value.Text = "N/A";
-                Fuel_remain_value.Text = "N/A";
-                Laps_estimate_value.Text = "N/A";
-                Brake_bias_value.Text = "N/A";
-                Speed_value.Text = "N/A";
-                Delta_value.Text = "N/A";
                 traction1_value.Text = "N/A";
                 traction2_value.Text = "N/A";
-                Laptime_value.Text = "00:00.00";
-                rpm.Text = "N/A";
-                gear.Text = "N";
-                Last_lap_value.Text = "N/A";
-
-                sessionNumberTemp = sessionNumber;
-                //newLapLogger.Log("Resetting variables", Environment.NewLine);
-
-                
             }
-            else
-            {
-                remainingTime = e.TelemetryInfo.SessionTimeRemain.Value;
-                fuelLevel = e.TelemetryInfo.FuelLevel.Value;
-
-                var brakebias = wrapper.GetData("dcBrakeBias");
-                Brake_bias_value.Text = Convert.ToDouble(brakebias).ToString("##.##");
-
-                if (DriverCarIdx != -9999)
-                    position = e.TelemetryInfo.CarIdxPosition.Value[DriverCarIdx];
-
-                try
-                {
-                    traction1_value.Text = Convert.ToInt32(wrapper.GetData("dcTractionControl")).ToString();
-                    traction2_value.Text = Convert.ToInt32(wrapper.GetData("dcTractionControl2")).ToString();
-                }
-                catch (Exception ex)
-                {
-                    traction1_value.Text = "N/A";
-                    traction2_value.Text = "N/A";
-                }
-
-                
-
-                //var engineWarnings = e.TelemetryInfo //need to test
-                //Delta_value.Text = wrapper.GetTelemetryValue<float>("LapDeltaToBestLap").ToString();
-
-                //Automatic_value.Text = e.TelemetryInfo.MGUKDeployFixed.ToString();  //for lmp1
-
-                //újraszámoljuk a szükséges adatokat
-                CalculateSpeed(e);
-                UpdateRpmLights(e);
-                NewLapCalculation(e);
-                CalculateGear(e);
-                //InPits(e);
-                InPitsV2(e);
-
-                //az UpdateLapTime mögé kellett rakjam, hogy legyen egy temp kör szám, így az updatelaptimeban majd a legfrissebbel hasonlitja ezt ami előtte bennevolt
-                lapCountTemp = e.TelemetryInfo.Lap.Value;
-
-
-                //Textek kiirása
-                rpm.Text = Math.Round(e.TelemetryInfo.RPM.Value).ToString();
-                Fuel_remain_value.Text = fuelLevel.ToString("##.##");
-
-            }
-
-
+            
         }
 
-        //private void CalculateDelta(SdkWrapper.TelemetryUpdatedEventArgs e)
-        //{
-        //    distanceOnLap = e.TelemetryInfo.LapDist.Value;
-        //    //minden körben tároljuk méterenként azt hol tartunk a pályán, és az időt hozzá
-        //    //azt rakjuk globálba, amelyik a legjobb idő volt és mindig ahhoz nézzük majd a következő köröket.
-        //    if (e.TelemetryInfo.Lap.Value == currentLap && e.TelemetryInfo.Lap.Value - lapCountPrevious == 1 && currentLap > 0) //ha a jelenlegi körben vagyunk
-        //    {
-        //        //ha még nincs beállított session best, akkor az első mért körünket vesszük
-        //        //figyelni kellesz hogy valid lap volt-e. Azaz a CalculateLapTime-ban majd állítani kell egy global változót
-        //        if (bestLapMeterAndTime.Count == 0)
-        //        {
-        //            var distInMeter = (int)Math.Round(e.TelemetryInfo.LapDist.Value);
-        //            //label2.Text = distInMeter.ToString();
-        //            if (distInMeter % meterThreshold == 0 && distInMeter != 0)
-        //            {
-        //                var distInMilliseconds = lapTimeStopWatch.ElapsedMilliseconds;
-        //                if (!distancesInMeterAndTime.ContainsKey(distInMeter))
-        //                {
-        //                    distancesInMeterAndTime.Add(distInMeter, distInMilliseconds);
 
-        //                    //distancesInMeterAndTime.Add(distInMeter, distInMilliseconds);
-        //                }
-        //            }
+        private void OnTelemetryUpdated(object sender, SdkWrapper.TelemetryUpdatedEventArgs e)
+        {
+            try
+            {
+                fpsCounter++;
 
-        //            if (distInMeter > trackLength - meterThreshold && manualLapCount == 1 && trackLength != -9999)
-        //            {
-        //                if (bestLapMeterAndTime.Count == 0)
-        //                {
-        //                    bestLapMeterAndTime = new Dictionary<int, float>(distancesInMeterAndTime);
-        //                    distancesInMeterAndTime.Clear();
-        //                }
-        //            }
-        //        }
-        //        else
-        //        {
-        //            if (bestLapMeterAndTime.Count != 0)
-        //            {
-        //                var distInMeter = (int)Math.Round(e.TelemetryInfo.LapDist.Value);
-        //                if (distInMeter % meterThreshold == 0 && distInMeter != 0 && distInMeter < trackLength - meterThreshold)
-        //                {
-        //                    var distInMilliseconds = (float)lapTimeStopWatch.ElapsedMilliseconds;
+                //Folyamatosan frissülő adatok
+                sessionNumber = e.TelemetryInfo.SessionNum.Value;
 
-        //                    //összehasonlitjuk az adott méteren az időkülönbséget
-        //                    var meterAndMillisecondPair = bestLapMeterAndTime.FirstOrDefault(pair => pair.Key == distInMeter);
-
-        //                    float diff = 0;
-        //                    if (meterAndMillisecondPair.Key > 0 && meterAndMillisecondPair.Value > 0 && distInMeter > 0)
-        //                    {
-        //                        diff = (distInMilliseconds - meterAndMillisecondPair.Value) / (float)1000.0;
-        //                    }
-        //                    else if (meterAndMillisecondPair.Key == 0 && meterAndMillisecondPair.Value == 0 && distInMeter > 0)
-        //                    {
-        //                        //az előtte lévővel iratom ki ha nemtalálunk mért időt adott méterhez
-        //                        bool foundOne = false;
-        //                        int times = 1;
-        //                        while (!foundOne)
-        //                        {
-        //                            meterAndMillisecondPair = bestLapMeterAndTime.FirstOrDefault(pair => pair.Key == distInMeter - 5 * times);
+                if (sessionNumberTemp == -1)
+                {
+                    //init sessionNum
+                    sessionNumberTemp = sessionNumber;
+                }
 
 
-        //                            if (meterAndMillisecondPair.Key != 0 && meterAndMillisecondPair.Value != 0)
-        //                            {
-        //                                diff = (distInMilliseconds - meterAndMillisecondPair.Value) / (float)1000.0;
-        //                                foundOne = true;
-        //                            }
-        //                            else
-        //                            {
-        //                                times++;
-        //                            }
+                if (sessionNumberTemp != sessionNumber || subSessionNumber != subSessionNumberTemp)
+                {
+                    //resetting variables
+                    lapCount = 0;
+                    lapCountTemp = -1;
+                    lapCountPrevious = 0;
 
-        //                        }
-        //                    }
-
-
-        //                    //kiírjuk
-        //                    switch (diff > 0)
-        //                    {
-        //                        case true:
-        //                            if (diff < 1)
-        //                            {
-        //                                Delta_value.Text = diff.ToString("+0.##");
-        //                            }
-        //                            else
-        //                            {
-        //                                Delta_value.Text = diff.ToString("+##.##");
-        //                            }
-
-        //                            break;
-        //                        case false:
-        //                            if (diff > -1)
-        //                            {
-        //                                Delta_value.Text = diff.ToString("0.##");
-        //                            }
-        //                            else
-        //                            {
-        //                                Delta_value.Text = diff.ToString("##.##");
-        //                            }
-
-        //                            break;
-        //                    }
+                    fuelLapStart = -1;
+                    fuelUsagePerLap = new List<double>();
+                    DriverCarIdx = -9999;
+                    remainingTime = 0;
+                    fuelLevel = 0;
+                    trackLength = -9999;
 
 
-        //                    //tároljuk hogy letudjam copyzni a best lapre
-        //                    if (!distancesInMeterAndTime.ContainsKey(distInMeter))
-        //                    {
-        //                        distancesInMeterAndTime.Add(distInMeter, distInMilliseconds);
-        //                    }
+                    Fuel_to_fill_value.Text = "N/A";
+                    Fuel_remain_value.Text = "N/A";
+                    Laps_estimate_value.Text = "N/A";
+                    Brake_bias_value.Text = "N/A";
+                    Speed_value.Text = "N/A";
+                    Delta_value.Text = "N/A";
+                    traction1_value.Text = "N/A";
+                    traction2_value.Text = "N/A";
+                    Laptime_value.Text = "00:00.000";
+                    rpm.Text = "N/A";
+                    gear.Text = "N";
+                    Last_lap_value.Text = "N/A";
+
+                    sessionNumberTemp = sessionNumber;
+
+                    //newLapLogger.Log("Resetting variables", Environment.NewLine + "OnTelemetryUpdated");
+                }
+                else
+                {
+                    //újraszámoljuk a szükséges adatokat
+                    CalculateSpeed(e);
+                    UpdateRpmLights(e);
+                    NewLapCalculation(e);
 
 
-        //                    //if (itWasABestLap)
-        //                    //{
-        //                    //    //lecopyzzuk
-        //                    //    bestLapMeterAndTime = new Dictionary<int, float>(distancesInMeterAndTime);
-        //                    //    itWasABestLap = false;
-        //                    //}
+                    if (fpsCounter == wrapper.TelemetryUpdateFrequency / NonRTCalculationFPS)
+                        NonRealtimeCalculations(e);
 
-        //                }
-        //            }
+                    //az UpdateLapTime mögé kellett rakjam, hogy legyen egy temp kör szám, így az updatelaptimeban majd a legfrissebbel hasonlitja ezt ami előtte bennevolt
+                    lapCountTemp = e.TelemetryInfo.Lap.Value;
 
-        //        }
 
-        //    }
-        //}
+                    //Textek kiirása
+                    rpm.Text = Math.Round(e.TelemetryInfo.RPM.Value).ToString();
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Logger errorLogger = new Logger(iRacingDash.Form1.logPath + iRacingDash.Form1.dateInString + "\\errorLog.txt");
+                errorLogger.Log("OnSessionTelemetryUpdated Error", ex.Message);
+            }
+        }
 
         private void InPitsV2(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
@@ -392,35 +268,11 @@ namespace iRacingDash
                 Pit_limiter_background_panel.Visible = false;
             }
 
-            //if (Convert.ToInt32(engineWarning) == 32) 
-            //{
-            //    //RPM MAX!
 
-            //}
         }
-
-        //private void InPits(SdkWrapper.TelemetryUpdatedEventArgs e)
-        //{
-        //    var onpitroad = e.TelemetryInfo.CarIdxOnPitRoad.Value;
-        //    if (DriverCarIdx != -9999 && onpitroad != null)
-        //    {
-        //        if (onpitroad[DriverCarIdx] == true)
-        //        {
-        //            Pit_Limiter_title.Visible = true;
-        //            Pit_limiter_background_panel.Visible = true;
-        //        }
-        //        else
-        //        {
-        //            Pit_Limiter_title.Visible = false;
-        //            Pit_limiter_background_panel.Visible = false;
-        //        }
-        //    }
-
-        //}
 
         private void CalculateGear(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
-            //correct print
             var gearValue = e.TelemetryInfo.Gear.Value;
             if (gearValue == -1)
                 gear.Text = "R";
@@ -442,8 +294,6 @@ namespace iRacingDash
             NewLapSettings(e);
             UpdateLapTimeV2(e);
             CalculateDeltaV2(e);
-            CalculateFuelUsagePerLap(e);
-            CalculateFuel(e);
         }
 
         private void NewLapSettings(SdkWrapper.TelemetryUpdatedEventArgs e)
@@ -458,6 +308,7 @@ namespace iRacingDash
                 currentLap = lapCount;
 
                 //creating the logger here
+                //fuelComputeLogger = new Logger(logPath + dateInString + "\\fuelCompute.txt"); TODO
                 newLapLogger = new Logger(logPath + dateInString + "\\newLap.txt");
                 this.newLapLogger.Log("Init", "lapCountTemp: " + lapCountTemp + Environment.NewLine + "  currentLap: " + currentLap);
             }
@@ -476,6 +327,7 @@ namespace iRacingDash
                 currentLap = lapCount;
 
                 newLapLogger.Log("In a new lap", "lapTimeConverted: " + lapTimeConverted + Environment.NewLine + "  lapCountPrevious: " + lapCountPrevious + Environment.NewLine + "  currentLap: " + currentLap);
+                
             }
         }
 
@@ -484,45 +336,45 @@ namespace iRacingDash
             var deltaObject = wrapper.GetData("LapDeltaToSessionBestLap");
             var deltaInt = Convert.ToDouble(deltaObject);
 
+            Delta_value.Text = string.Format("{0:0.00}", deltaInt); deltaInt.ToString("+0" + ".##");
 
+            //if (deltaInt > 0)
+            //{
+            //    if (deltaInt < 1)
+            //    {
+            //        Delta_value.Text = string.Format("{0:0.00}",deltaInt); deltaInt.ToString("+0" + ".##");
+            //    }
+            //    else
+            //    {
+            //        Delta_value.Text = deltaInt.ToString("+##.##");
+            //    }
 
-            if (deltaInt > 0)
-            {
-                if (deltaInt < 1)
-                {
-                    Delta_value.Text = deltaInt.ToString("+0" + ".##");
-                }
-                else
-                {
-                    Delta_value.Text = deltaInt.ToString("+##.##");
-                }
+            //}
+            //else
 
-            }
-            else
+            //if (deltaInt < 0)
+            //{
+            //    if (deltaInt > -1)
+            //    {
+            //        Delta_value.Text = deltaInt.ToString("0" + ".##");
+            //    }
+            //    else
+            //    {
+            //        Delta_value.Text = deltaInt.ToString("##.##");
+            //    }
 
-            if (deltaInt < 0)
-            {
-                if (deltaInt > -1)
-                {
-                    Delta_value.Text = deltaInt.ToString("0" + ".##");
-                }
-                else
-                {
-                    Delta_value.Text = deltaInt.ToString("##.##");
-                }
+            //}
+            //else
 
-            }
-            else
-
-            if (deltaInt == 0)
-            {
-                Delta_value.Text = deltaInt.ToString("0.00");
-            }
-            else
-            if (deltaInt % 1 == 0)
-            {
-                Delta_value.Text = deltaInt.ToString("0.00");
-            }
+            //if (deltaInt == 0)
+            //{
+            //    Delta_value.Text = deltaInt.ToString("0.00");
+            //}
+            //else
+            //if (deltaInt % 1 == 0)
+            //{
+            //    Delta_value.Text = deltaInt.ToString("0.00");
+            //}
 
         }
 
@@ -578,46 +430,6 @@ namespace iRacingDash
             }
         }
 
-        //private void UpdateLaptime(SdkWrapper.TelemetryUpdatedEventArgs e)
-        //{
-        //    var lapDist = e.TelemetryInfo.LapDist.Value;
-        //    lapCount = e.TelemetryInfo.Lap.Value;
-
-        //    //init lapcountTemp
-        //    if (lapCountTemp == -1)
-        //    {
-        //        //distancesInMeterAndTime.Clear();
-        //        lapCountTemp = lapCount;
-        //        currentLap = lapCount;
-        //        lapTimeStopWatch.Start();
-        //    }
-
-        //    if (lapCount - lapCountTemp == 1)
-        //    {
-        //        lapStarted = true;
-
-        //        lapCountPrevious = currentLap;
-        //        currentLap = lapCount;
-        //        lapTimeStopWatch.Restart();
-        //        manualLapCount++;
-        //    }
-
-
-        //    if (lapTimeStopWatch.ElapsedMilliseconds != 0)
-        //    {
-        //        float min = (lapTimeStopWatch.ElapsedMilliseconds / 1000) / 60;
-        //        float sec = (lapTimeStopWatch.ElapsedMilliseconds / 1000) % 60;
-
-        //        float tenth = (lapTimeStopWatch.ElapsedMilliseconds / 100) % 10;
-        //        float hundredth = (lapTimeStopWatch.ElapsedMilliseconds / 10) % 10;
-        //        float thousandth = lapTimeStopWatch.ElapsedMilliseconds % 10;
-
-        //        //var s = String.Format("{0}{1}{2}", tenth, hundredth, thousandth);
-        //        string laptime = min + ":" + sec + ":" + tenth + "" + hundredth + "" + thousandth;
-        //        Laptime_value.Text = laptime;
-        //    }
-        //}
-
         private void UpdateLapTimeV2(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
             var lapObject = wrapper.GetData("LapCurrentLapTime");
@@ -631,11 +443,12 @@ namespace iRacingDash
             string laptime;
             if (decimalPart > 0)
             {
-                laptime = min.ToString("00") + ":" + sec.ToString("00") + "." + decimalPart.ToString().Substring(2, 3);
+                laptime = string.Format("{0:00}:{1:00}.{2:000}",min,sec,decimalPart.ToString().Substring(2, 3));
+                //laptime = min.ToString("00") + ":" + sec.ToString("00") + "." + decimalPart.ToString().Substring(2, 3);
             }
             else
             {
-                laptime = min.ToString("00") + ":" + sec.ToString("00") + "." + decimalPart.ToString("000");
+                laptime = string.Format("{0:00}:{1:00}.{2:000}", 0, 0, 0);
             }
 
             Laptime_value.Text = laptime;
@@ -768,15 +581,7 @@ namespace iRacingDash
                 gear_panel.BackColor = Color.Gold;
                 gear.ForeColor = Color.Black;
             }
-            //else
-            //{
-            //    led1_1.Visible = false;
-            //    led1_2.Visible = false;
-            //    led1_3.Visible = false;
-            //    led1_4.Visible = false;
-            //    led1_5.Visible = false;
-            //    led1_6.Visible = false;
-            //}
+
 
 
             if (rpmPercent > minRpmPercent + shiftLight1Percent &&
@@ -918,129 +723,62 @@ namespace iRacingDash
 
         private void OnSessionInfoUpdated(object sender, SdkWrapper.SessionInfoUpdatedEventArgs e)
         {
-            subSessionNumber = Int32.Parse(e.SessionInfo["WeekendInfo"]["SubSessionID"].Value);
-
-            if (subSessionNumberTemp == -1)
+            try
             {
-                //init SubSessionIdTemp
-                subSessionNumberTemp = subSessionNumber;
-            }
 
-            if (sessionNumber != sessionNumberTemp || subSessionNumber != subSessionNumberTemp)
+
+                subSessionNumber = Int32.Parse(e.SessionInfo["WeekendInfo"]["SubSessionID"].Value);
+
+                if (subSessionNumberTemp == -1)
+                {
+                    //init SubSessionIdTemp
+                    subSessionNumberTemp = subSessionNumber;
+                }
+
+                if (sessionNumber != sessionNumberTemp || subSessionNumber != subSessionNumberTemp)
+                {
+                    //reset
+                    maxFuelOfCar = -9999;
+                    trackLength = 0;
+                    subSessionNumberTemp = subSessionNumber;
+
+                    lapCount = 0;
+                    lapCountTemp = -1;
+                    lapCountPrevious = 0;
+
+                    fuelLapStart = -1;
+                    fuelUsagePerLap.Clear();
+                    DriverCarIdx = -9999;
+                    remainingTime = 0;
+                    fuelLevel = 0;
+                    trackLength = -9999;
+
+                    Fuel_to_fill_value.Text = "N/A";
+                    Fuel_remain_value.Text = "N/A";
+                    Laps_estimate_value.Text = "N/A";
+                    Brake_bias_value.Text = "N/A";
+                    Speed_value.Text = "N/A";
+                    Delta_value.Text = "N/A";
+                    traction1_value.Text = "N/A";
+                    traction2_value.Text = "N/A";
+                    Laptime_value.Text = "00:00.000";
+                    rpm.Text = "N/A";
+                    gear.Text = "N";
+                    Last_lap_value.Text = "N/A";
+
+                    //newLapLogger.Log("Resetting variables", Environment.NewLine + "OnSessionUpdated");
+                }
+                else
+                {
+                    maxFuelOfCar = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarFuelMaxLtr"].Value);
+                    trackLength = float.Parse(e.SessionInfo["WeekendInfo"]["TrackLength"].Value.Substring(0, 4)) * 1000;
+                }
+            }
+            catch (Exception ex)
             {
-                //reset
-                maxFuelOfCar = -9999;
-                trackLength = 0;
-                subSessionNumberTemp = subSessionNumber;
-
-                lapCount = 0;
-                lapCountTemp = -1;
-                lapCountPrevious = 0;
-
-                fuelLapStart = -1;
-                fuelUsagePerLap.Clear();
-                DriverCarIdx = -9999;
-                remainingTime = 0;
-                fuelLevel = 0;
-                trackLength = -9999;
-
-                Fuel_to_fill_value.Text = "N/A";
-                Fuel_remain_value.Text = "N/A";
-                Laps_estimate_value.Text = "N/A";
-                Brake_bias_value.Text = "N/A";
-                Speed_value.Text = "N/A";
-                Delta_value.Text = "N/A";
-                traction1_value.Text = "N/A";
-                traction2_value.Text = "N/A";
-                Laptime_value.Text = "00:00.00";
-                rpm.Text = "N/A";
-                gear.Text = "N";
-                Last_lap_value.Text = "N/A";
+                
             }
-            else
-            {
-                maxFuelOfCar = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarFuelMaxLtr"].Value);
-                trackLength = float.Parse(e.SessionInfo["WeekendInfo"]["TrackLength"].Value.Substring(0, 4)) * 1000;
-            }
-
-
         }
-
-        //        private void StoreLastLapTime(SdkWrapper.SessionInfoUpdatedEventArgs e)
-        //        {
-        //#pragma Köridők tárolása
-        //            //TODO csak kör befejezése után számitgassunk már
-        //            DriverCarIdx = Int32.Parse(e.SessionInfo["DriverInfo"]["DriverCarIdx"].Value);
-        //            int i = 1;
-        //            bool theresMoreDriver = true;
-
-        //            while (theresMoreDriver) //a második feltétel az új kör feltétele, azaz csak új körönként fogom megnézni a köridőt
-        //            {
-        //                int carId = -1;
-        //                var carIdInString =
-        //                    e.SessionInfo["SessionInfo"]["Sessions"]["SessionNum", sessionNumber]["ResultsPositions"]
-        //                        ["Position", i]["CarIdx"].GetValue();
-
-        //                if (carIdInString != null)
-        //                {
-        //                    Int32.TryParse(
-        //                        e.SessionInfo["SessionInfo"]["Sessions"]["SessionNum", sessionNumber]["ResultsPositions"]
-        //                            ["Position", i]["CarIdx"].GetValue(), out carId);
-        //                }
-        //                else
-        //                {
-        //                    //nem tudtuk lekérni a poziciokat, ezért ez azt jelenti, hogy legelsőként vagy a szerveren és nincs beállított mértidő
-        //                    break;
-        //                }
-
-
-        //                if (carId == DriverCarIdx)
-        //                {
-        //                    float time = 0.0f;
-        //                    float.TryParse(
-        //                        e.SessionInfo["SessionInfo"]["Sessions"]["SessionNum", sessionNumber]["ResultsPositions"]
-        //                            ["Position", i]["LastTime"].GetValue(), out time);
-
-        //                    //listába rakom a köridőket
-        //                    if (laptimes.Count != 0 && laptimes[laptimes.Count - 1] != time)
-        //                    {
-        //                        if (time != -1)
-        //                            laptimes.Add(time);
-
-        //                        //legjobb kör lementéséhez való beállítások
-        //                        if (laptimes[laptimes.Count - 1] > time)
-        //                        {
-        //                            bestLapMeterAndTime = new Dictionary<int, float>(distancesInMeterAndTime);
-
-        //                            itWasABestLap = true;
-        //                            bestlap.Clear();
-        //                            bestlap.Add(laptimes.Count - 1, time);
-        //                        }
-        //                        else
-        //                        {
-        //                            itWasABestLap = false;
-        //                        }
-        //                    }
-        //                    else if (laptimes.Count == 0)
-        //                    {
-        //                        if (time != -1)
-        //                            laptimes.Add(time);
-
-        //                        itWasABestLap = true;
-        //                    }
-
-
-        //                    if (time != 0.0f)
-        //                    {
-        //                        //szarmegjelenités csak magamnak
-        //                        //string laptime = (int)time/60+":"+(int)time%60+":"+(time - Math.Truncate(time)).ToString().Substring(2, 3);
-        //                        theresMoreDriver = false;
-        //                    }
-        //                }
-        //                i++;
-        //            }
-        //#pragma
-        //        }
 
 
         private void CalculateFuel(SdkWrapper.TelemetryUpdatedEventArgs e)
@@ -1052,7 +790,8 @@ namespace iRacingDash
 
             var remainingLapsWithFuel = fuelLevel / avgFuelUsage;
             if (HasValue(remainingLapsWithFuel))
-                Laps_estimate_value.Text = remainingLapsWithFuel.ToString("##.##");
+                Laps_estimate_value.Text = string.Format("{0:00.00}",remainingLapsWithFuel);
+                //remainingLapsWithFuel.ToString("##.##");
 
             //to fill to the end
             var timeWithoutFuel = remainingTime - (avgLapTime * remainingLapsWithFuel);
@@ -1071,11 +810,13 @@ namespace iRacingDash
                     var toFill = (floorLapsToFill * avgFuelUsage) + fillForLeftover + Math.Ceiling(avgFuelUsage);
                     if (toFill > maxFuelOfCar)
                     {
-                        Fuel_to_fill_value.Text = maxFuelOfCar.ToString("##.##");
+                        Fuel_to_fill_value.Text = string.Format("{0:00.00}",maxFuelOfCar);
+                        //maxFuelOfCar.ToString("##.##");
                     }
                     else
                     {
-                        Fuel_to_fill_value.Text = toFill.ToString("##.##");
+                        Fuel_to_fill_value.Text = string.Format("0:00.00", toFill);
+                        //toFill.ToString("##.##");
                     }
                 }
             }
@@ -1111,6 +852,11 @@ namespace iRacingDash
             return max / list.Count;
         }
 
+
+
+
+        #region FORM BETÖLTÉS
+
         private void Form1_Load(object sender, EventArgs e)
         {
             this.Location = new Point(0, 0);
@@ -1139,5 +885,7 @@ namespace iRacingDash
             if (clicked)
                 clicked = false;
         }
+
+        #endregion
     }
 }
