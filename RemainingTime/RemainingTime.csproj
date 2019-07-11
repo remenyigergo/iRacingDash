@@ -47,6 +47,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>rt-icon.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="iRacingSdkWrapper">
       <HintPath>..\..\..\source\repos\iRacingDash\iRacingSdkWrapper\iRacingSdkWrapper\bin\Debug\iRacingSdkWrapper.dll</HintPath>
@@ -108,6 +111,15 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\iRacingDash\iRacingDash.csproj">
+      <Project>{12f641e1-4455-4564-86c0-7659794c8892}</Project>
+      <Name>iRacingDash</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="rt-icon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

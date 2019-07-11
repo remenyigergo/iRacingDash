@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Newtonsoft.Json;
 
 namespace iRacingDash
 {
     class Configurator
     {
-        public float Configurate(string descendant, string element, string attribute)
+        public T Configurate<T>(string descendant, string element, string attribute)
         {
             string startupPath = Environment.CurrentDirectory;
             
@@ -25,17 +26,18 @@ namespace iRacingDash
                     var elementAttribute = elem.Attribute(attribute);
                     if (elementAttribute != null)
                     {
-                        return float.Parse(elem.Attribute(attribute).Value);
+                        return (T)Convert.ChangeType(elem.Attribute(attribute).Value.ToString(), typeof(T));
                     }
                     
                 }
-                return 0;
+                return (T)Convert.ChangeType(0, typeof(T));
             }
             else
             {
-                return -1;
+                return (T)Convert.ChangeType(-1, typeof(T));
             }
         }
+
 
     }
 }

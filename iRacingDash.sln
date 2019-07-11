@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2041
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iRacingDash", "iRacingDash\iRacingDash.csproj", "{12F641E1-4455-4564-86C0-7659794C8892}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemainingTime", "RemainingTime\RemainingTime.csproj", "{6064CE02-FE67-4F84-B217-C0B5BCF98ED3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iRacingSdkWrapper", "iRacingSdkWrapper\iRacingSdkWrapper\iRacingSdkWrapper.csproj", "{D6DB568B-35B3-49EB-8CB3-E4E5F1424247}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iRSDKSharp", "iRacingSdkWrapper\irsdkSharp\iRSDKSharp.csproj", "{72631B85-EB9A-473E-9B4C-65B355A9000D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WECOverlay", "WECOverlay\WECOverlay.csproj", "{83626C6D-C41E-48C8-BA14-E269C88BA844}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{12F641E1-4455-4564-86C0-7659794C8892}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12F641E1-4455-4564-86C0-7659794C8892}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12F641E1-4455-4564-86C0-7659794C8892}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12F641E1-4455-4564-86C0-7659794C8892}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6064CE02-FE67-4F84-B217-C0B5BCF98ED3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6064CE02-FE67-4F84-B217-C0B5BCF98ED3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6064CE02-FE67-4F84-B217-C0B5BCF98ED3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6064CE02-FE67-4F84-B217-C0B5BCF98ED3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6DB568B-35B3-49EB-8CB3-E4E5F1424247}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6DB568B-35B3-49EB-8CB3-E4E5F1424247}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6DB568B-35B3-49EB-8CB3-E4E5F1424247}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6DB568B-35B3-49EB-8CB3-E4E5F1424247}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72631B85-EB9A-473E-9B4C-65B355A9000D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72631B85-EB9A-473E-9B4C-65B355A9000D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72631B85-EB9A-473E-9B4C-65B355A9000D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72631B85-EB9A-473E-9B4C-65B355A9000D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83626C6D-C41E-48C8-BA14-E269C88BA844}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83626C6D-C41E-48C8-BA14-E269C88BA844}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83626C6D-C41E-48C8-BA14-E269C88BA844}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83626C6D-C41E-48C8-BA14-E269C88BA844}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DF47ABDE-5AD1-46C9-9323-D172A8998EFB}
+	EndGlobalSection
+EndGlobal
