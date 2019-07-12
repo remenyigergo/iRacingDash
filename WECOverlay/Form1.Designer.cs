@@ -59,6 +59,29 @@
             this.brake = new System.Windows.Forms.PictureBox();
             this.position = new System.Windows.Forms.Label();
             this.class_picture = new System.Windows.Forms.PictureBox();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.panel3 = new System.Windows.Forms.Panel();
+            this.panel4 = new System.Windows.Forms.Panel();
+            this.panel5 = new System.Windows.Forms.Panel();
+            this.panel6 = new System.Windows.Forms.Panel();
+            this.panel7 = new System.Windows.Forms.Panel();
+            this.panel8 = new System.Windows.Forms.Panel();
+            this.panel9 = new System.Windows.Forms.Panel();
+            this.panel10 = new System.Windows.Forms.Panel();
+            this.panel11 = new System.Windows.Forms.Panel();
+            this.panel12 = new System.Windows.Forms.Panel();
+            this.panel13 = new System.Windows.Forms.Panel();
+            this.panel14 = new System.Windows.Forms.Panel();
+            this.panel15 = new System.Windows.Forms.Panel();
+            this.panel16 = new System.Windows.Forms.Panel();
+            this.panel17 = new System.Windows.Forms.Panel();
+            this.panel18 = new System.Windows.Forms.Panel();
+            this.panel19 = new System.Windows.Forms.Panel();
+            this.panel20 = new System.Windows.Forms.Panel();
+            this.panel21 = new System.Windows.Forms.Panel();
+            this.panel22 = new System.Windows.Forms.Panel();
+            this.panel23 = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
@@ -397,12 +420,219 @@
             this.class_picture.TabIndex = 29;
             this.class_picture.TabStop = false;
             // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel1.Location = new System.Drawing.Point(280, 229);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(28, 4);
+            this.panel1.TabIndex = 30;
+            // 
+            // panel2
+            // 
+            this.panel2.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel2.Location = new System.Drawing.Point(283, 223);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(28, 4);
+            this.panel2.TabIndex = 31;
+            // 
+            // panel3
+            // 
+            this.panel3.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel3.Location = new System.Drawing.Point(286, 217);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(30, 4);
+            this.panel3.TabIndex = 32;
+            // 
+            // panel4
+            // 
+            this.panel4.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel4.Location = new System.Drawing.Point(289, 211);
+            this.panel4.Name = "panel4";
+            this.panel4.Size = new System.Drawing.Size(31, 4);
+            this.panel4.TabIndex = 33;
+            // 
+            // panel5
+            // 
+            this.panel5.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel5.Location = new System.Drawing.Point(292, 205);
+            this.panel5.Name = "panel5";
+            this.panel5.Size = new System.Drawing.Size(34, 4);
+            this.panel5.TabIndex = 34;
+            // 
+            // panel6
+            // 
+            this.panel6.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel6.Location = new System.Drawing.Point(294, 199);
+            this.panel6.Name = "panel6";
+            this.panel6.Size = new System.Drawing.Size(35, 4);
+            this.panel6.TabIndex = 35;
+            // 
+            // panel7
+            // 
+            this.panel7.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel7.Location = new System.Drawing.Point(297, 193);
+            this.panel7.Name = "panel7";
+            this.panel7.Size = new System.Drawing.Size(35, 4);
+            this.panel7.TabIndex = 36;
+            // 
+            // panel8
+            // 
+            this.panel8.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel8.Location = new System.Drawing.Point(299, 187);
+            this.panel8.Name = "panel8";
+            this.panel8.Size = new System.Drawing.Size(37, 4);
+            this.panel8.TabIndex = 37;
+            // 
+            // panel9
+            // 
+            this.panel9.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel9.Location = new System.Drawing.Point(301, 181);
+            this.panel9.Name = "panel9";
+            this.panel9.Size = new System.Drawing.Size(39, 4);
+            this.panel9.TabIndex = 38;
+            // 
+            // panel10
+            // 
+            this.panel10.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel10.Location = new System.Drawing.Point(304, 175);
+            this.panel10.Name = "panel10";
+            this.panel10.Size = new System.Drawing.Size(40, 4);
+            this.panel10.TabIndex = 39;
+            // 
+            // panel11
+            // 
+            this.panel11.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel11.Location = new System.Drawing.Point(307, 169);
+            this.panel11.Name = "panel11";
+            this.panel11.Size = new System.Drawing.Size(42, 4);
+            this.panel11.TabIndex = 40;
+            // 
+            // panel12
+            // 
+            this.panel12.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel12.Location = new System.Drawing.Point(309, 163);
+            this.panel12.Name = "panel12";
+            this.panel12.Size = new System.Drawing.Size(44, 4);
+            this.panel12.TabIndex = 41;
+            // 
+            // panel13
+            // 
+            this.panel13.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel13.Location = new System.Drawing.Point(311, 157);
+            this.panel13.Name = "panel13";
+            this.panel13.Size = new System.Drawing.Size(46, 4);
+            this.panel13.TabIndex = 42;
+            // 
+            // panel14
+            // 
+            this.panel14.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel14.Location = new System.Drawing.Point(313, 151);
+            this.panel14.Name = "panel14";
+            this.panel14.Size = new System.Drawing.Size(46, 4);
+            this.panel14.TabIndex = 43;
+            // 
+            // panel15
+            // 
+            this.panel15.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel15.Location = new System.Drawing.Point(315, 145);
+            this.panel15.Name = "panel15";
+            this.panel15.Size = new System.Drawing.Size(48, 4);
+            this.panel15.TabIndex = 44;
+            // 
+            // panel16
+            // 
+            this.panel16.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel16.Location = new System.Drawing.Point(317, 139);
+            this.panel16.Name = "panel16";
+            this.panel16.Size = new System.Drawing.Size(49, 4);
+            this.panel16.TabIndex = 45;
+            // 
+            // panel17
+            // 
+            this.panel17.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel17.Location = new System.Drawing.Point(318, 133);
+            this.panel17.Name = "panel17";
+            this.panel17.Size = new System.Drawing.Size(51, 4);
+            this.panel17.TabIndex = 46;
+            // 
+            // panel18
+            // 
+            this.panel18.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel18.Location = new System.Drawing.Point(321, 127);
+            this.panel18.Name = "panel18";
+            this.panel18.Size = new System.Drawing.Size(53, 4);
+            this.panel18.TabIndex = 47;
+            // 
+            // panel19
+            // 
+            this.panel19.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel19.Location = new System.Drawing.Point(323, 121);
+            this.panel19.Name = "panel19";
+            this.panel19.Size = new System.Drawing.Size(56, 4);
+            this.panel19.TabIndex = 48;
+            // 
+            // panel20
+            // 
+            this.panel20.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel20.Location = new System.Drawing.Point(325, 115);
+            this.panel20.Name = "panel20";
+            this.panel20.Size = new System.Drawing.Size(58, 4);
+            this.panel20.TabIndex = 49;
+            // 
+            // panel21
+            // 
+            this.panel21.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel21.Location = new System.Drawing.Point(328, 109);
+            this.panel21.Name = "panel21";
+            this.panel21.Size = new System.Drawing.Size(60, 4);
+            this.panel21.TabIndex = 50;
+            // 
+            // panel22
+            // 
+            this.panel22.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel22.Location = new System.Drawing.Point(331, 103);
+            this.panel22.Name = "panel22";
+            this.panel22.Size = new System.Drawing.Size(62, 4);
+            this.panel22.TabIndex = 51;
+            // 
+            // panel23
+            // 
+            this.panel23.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel23.Location = new System.Drawing.Point(332, 97);
+            this.panel23.Name = "panel23";
+            this.panel23.Size = new System.Drawing.Size(64, 4);
+            this.panel23.TabIndex = 52;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("$this.BackgroundImage")));
             this.ClientSize = new System.Drawing.Size(834, 282);
+            this.Controls.Add(this.panel23);
+            this.Controls.Add(this.panel22);
+            this.Controls.Add(this.panel21);
+            this.Controls.Add(this.panel20);
+            this.Controls.Add(this.panel19);
+            this.Controls.Add(this.panel18);
+            this.Controls.Add(this.panel17);
+            this.Controls.Add(this.panel16);
+            this.Controls.Add(this.panel15);
+            this.Controls.Add(this.panel14);
+            this.Controls.Add(this.panel13);
+            this.Controls.Add(this.panel12);
+            this.Controls.Add(this.panel11);
+            this.Controls.Add(this.panel10);
+            this.Controls.Add(this.panel9);
+            this.Controls.Add(this.panel8);
+            this.Controls.Add(this.panel7);
+            this.Controls.Add(this.panel6);
+            this.Controls.Add(this.panel5);
+            this.Controls.Add(this.panel4);
+            this.Controls.Add(this.panel3);
+            this.Controls.Add(this.panel2);
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.class_picture);
             this.Controls.Add(this.position);
             this.Controls.Add(this.brake);
@@ -437,6 +667,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "WECOverlay";
+            this.TopMost = true;
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
@@ -500,6 +731,29 @@
         private System.Windows.Forms.PictureBox brake;
         private System.Windows.Forms.Label position;
         private System.Windows.Forms.PictureBox class_picture;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.Panel panel4;
+        private System.Windows.Forms.Panel panel5;
+        private System.Windows.Forms.Panel panel6;
+        private System.Windows.Forms.Panel panel7;
+        private System.Windows.Forms.Panel panel8;
+        private System.Windows.Forms.Panel panel9;
+        private System.Windows.Forms.Panel panel10;
+        private System.Windows.Forms.Panel panel11;
+        private System.Windows.Forms.Panel panel12;
+        private System.Windows.Forms.Panel panel13;
+        private System.Windows.Forms.Panel panel14;
+        private System.Windows.Forms.Panel panel15;
+        private System.Windows.Forms.Panel panel16;
+        private System.Windows.Forms.Panel panel17;
+        private System.Windows.Forms.Panel panel18;
+        private System.Windows.Forms.Panel panel19;
+        private System.Windows.Forms.Panel panel20;
+        private System.Windows.Forms.Panel panel21;
+        private System.Windows.Forms.Panel panel22;
+        private System.Windows.Forms.Panel panel23;
     }
 }
 

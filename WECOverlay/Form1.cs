@@ -23,6 +23,7 @@ namespace WECOverlay
         private string carClassColor;
         private int sessionNumber;
         private int carPosition;
+        private bool pictureLedEnabled = false;
 
         int rpm1 = 2000;
         int rpm2 = 3000;
@@ -39,7 +40,7 @@ namespace WECOverlay
 
             wrapper = new SdkWrapper();
             wrapper.Start();
-            wrapper.TelemetryUpdateFrequency = 30;
+            wrapper.TelemetryUpdateFrequency = 60;
             wrapper.TelemetryUpdated += OnTelemetryUpdated;
             wrapper.SessionInfoUpdated += OnSessionInfoUpdated;
         }
@@ -68,6 +69,30 @@ namespace WECOverlay
             pictureBox20.Visible = false;
             pictureBox21.Visible = false;
 
+            panel1.Visible = false;
+            panel2.Visible = false;
+            panel3.Visible = false;
+            panel4.Visible = false;
+            panel5.Visible = false;
+            panel6.Visible = false;
+            panel7.Visible = false;
+            panel8.Visible = false;
+            panel9.Visible = false;
+            panel10.Visible = false;
+            panel11.Visible = false;
+            panel12.Visible = false;
+            panel13.Visible = false;
+            panel14.Visible = false;
+            panel15.Visible = false;
+            panel16.Visible = false;
+            panel17.Visible = false;
+            panel18.Visible = false;
+            panel19.Visible = false;
+            panel20.Visible = false;
+            panel21.Visible = false;
+            panel22.Visible = false;
+            panel23.Visible = false;
+
             throttle.Size = new Size(12, 33);
             brake.Size = new Size(18, 39);
 
@@ -82,7 +107,16 @@ namespace WECOverlay
             position.Text = e.TelemetryInfo.CarIdxClassPosition.Value[driverCarIdx].ToString();
 
             SetClassColor(e);
-            ShiftLights(e);
+
+            if (pictureLedEnabled)
+            {
+                ShiftLights(e);
+            }
+            else
+            {
+                ShiftLightsPanels(e);
+            }
+
             Pedals(e);
         }
 
@@ -147,6 +181,10 @@ namespace WECOverlay
                 teamName = e.SessionInfo["DriverInfo"]["Drivers"]["CarIdx", driverCarIdx]["TeamName"].Value;
                 carClassColor = e.SessionInfo["DriverInfo"]["Drivers"]["CarIdx", driverCarIdx]["CarClassColor"].Value;
                 var telemetryDiskFile = e.SessionInfo["WeekendInfo"]["TelemetryOptions"]["TelemetryDiskFile"].Value;
+                var isMaxRpmValid = float.TryParse(e.SessionInfo["DriverInfo"]["DriverCarRedline"].Value, out maxRpm);
+
+                if (isMaxRpmValid)
+                    maxRpm = float.Parse(e.SessionInfo["DriverInfo"]["Drivers"].Value);
 
                 car_number_value.Text = carNumber.ToString();
                 team_name_value.Text = teamName;
@@ -243,6 +281,7 @@ namespace WECOverlay
                 pictureBox19.Visible = false;
                 pictureBox20.Visible = false;
                 pictureBox21.Visible = false;
+
             }
             else if (actual_rpm > 2000 && actual_rpm <= rpm2)
             {
@@ -576,6 +615,459 @@ namespace WECOverlay
                 pictureBox19.Visible = true;
                 pictureBox20.Visible = true;
                 pictureBox21.Visible = true;
+            }
+
+        }
+
+        private void ShiftLightsPanels(SdkWrapper.TelemetryUpdatedEventArgs e)
+        {
+            actual_rpm = float.Parse(e.TelemetryInfo.RPM.Value.ToString());
+
+            //0-2 x 1000
+            if (actual_rpm > 0 && actual_rpm <= rpm1)
+            {
+                //alsó korlát
+                var rpmBottom = 0;
+                //felső korlát
+                var rpmTop = rpm1;
+
+                //megmondom mennyi az rpm különbség amit 6 részre osztok
+                var diff = rpmTop - rpmBottom;
+
+                var rpmPercent = actual_rpm / (maxRpm / 100);
+                //felosztás
+                var oneSixth = diff / 6;
+
+                //
+                var percent1 = (rpmBottom + oneSixth) / (maxRpm / 100);
+                var percent2 = (rpmBottom + oneSixth * 2) / (maxRpm / 100);
+                var percent3 = (rpmBottom + oneSixth * 3) / (maxRpm / 100);
+                var percent4 = (rpmBottom + oneSixth * 4) / (maxRpm / 100);
+                var percent5 = (rpmBottom + oneSixth * 5) / (maxRpm / 100);
+                var percent6 = (rpmBottom + oneSixth * 5) / (maxRpm / 100);
+
+                //1
+                if (rpmPercent < percent1 && rpmPercent > rpmBottom)
+                {
+                    panel1.Visible = true;
+                    panel2.Visible = false;
+                    panel3.Visible = false;
+                    panel4.Visible = false;
+                    panel5.Visible = false;
+                    panel6.Visible = false;
+                }
+                else if (rpmPercent > percent1 && rpmPercent < percent2)
+                {
+                    panel1.Visible = true;
+                    panel2.Visible = true;
+                    panel3.Visible = false;
+                    panel4.Visible = false;
+                    panel5.Visible = false;
+                    panel6.Visible = false;
+                }
+                else if (rpmPercent > percent2 && rpmPercent < percent3)
+                {
+                    panel1.Visible = true;
+                    panel2.Visible = true;
+                    panel3.Visible = true;
+                    panel4.Visible = false;
+                    panel5.Visible = false;
+                    panel6.Visible = false;
+                }
+                else if (rpmPercent > percent3 && rpmPercent < percent4)
+                {
+                    panel1.Visible = true;
+                    panel2.Visible = true;
+                    panel3.Visible = true;
+                    panel4.Visible = true;
+                    panel5.Visible = false;
+                    panel6.Visible = false;
+                }
+                else if (rpmPercent > percent4 && rpmPercent < percent5)
+                {
+                    panel1.Visible = true;
+                    panel2.Visible = true;
+                    panel3.Visible = true;
+                    panel4.Visible = true;
+                    panel5.Visible = true;
+                    panel6.Visible = false;
+                }
+                else if (rpmPercent > percent4 && rpmPercent < percent5)
+                {
+                    panel1.Visible = true;
+                    panel2.Visible = true;
+                    panel3.Visible = true;
+                    panel4.Visible = true;
+                    panel5.Visible = true;
+                    panel6.Visible = true;
+                }
+
+                panel7.Visible = false;
+                panel8.Visible = false;
+                panel9.Visible = false;
+                panel10.Visible = false;
+                panel11.Visible = false;
+                panel12.Visible = false;
+                panel13.Visible = false;
+                panel14.Visible = false;
+                panel15.Visible = false;
+                panel16.Visible = false;
+                panel17.Visible = false;
+                panel18.Visible = false;
+                panel19.Visible = false;
+                panel20.Visible = false;
+                panel21.Visible = false;
+                panel22.Visible = false;
+                panel23.Visible = false;
+            }
+            else if (actual_rpm > 2000 && actual_rpm <= rpm2)
+            {
+
+                panel1.Visible = true;
+                panel2.Visible = true;
+                panel3.Visible = true;
+                panel4.Visible = true;
+                panel5.Visible = true;
+                panel6.Visible = true;
+
+                //alsó korlát
+                var rpmBottom = rpm1;
+                //felső korlát
+                var rpmTop = rpm2;
+
+                //megmondom mennyi az rpm különbség amit 6 részre osztok
+                var diff = rpmTop - rpmBottom;
+
+                var rpmPercent = actual_rpm / (maxRpm / 100);
+
+                //felosztás
+                var oneThird = diff / 3;
+
+                //
+                var percent1 = (rpmBottom + oneThird) / (maxRpm / 100);
+                var percent2 = (rpmBottom + oneThird * 2) / (maxRpm / 100);
+                var percent3 = (rpmBottom + oneThird * 3) / (maxRpm / 100);
+
+                //1
+                if (rpmPercent < percent1 && rpmPercent >= rpmBottom)
+                {
+                    panel7.Visible = true;
+                    panel8.Visible = false;
+                    panel9.Visible = false;
+                }
+                else if (rpmPercent > percent1 && rpmPercent < percent2)
+                {
+                    panel7.Visible = true;
+                    panel8.Visible = true;
+                    panel9.Visible = false;
+                }
+                else if (rpmPercent > percent2 && rpmPercent < percent3)
+                {
+                    panel7.Visible = true;
+                    panel8.Visible = true;
+                    panel9.Visible = true;
+                }
+
+                panel10.Visible = false;
+                panel11.Visible = false;
+                panel12.Visible = false;
+                panel13.Visible = false;
+                panel14.Visible = false;
+                panel15.Visible = false;
+                panel16.Visible = false;
+                panel17.Visible = false;
+                panel18.Visible = false;
+                panel19.Visible = false;
+                panel20.Visible = false;
+                panel21.Visible = false;
+                panel22.Visible = false;
+                panel23.Visible = false;
+            }
+            else if (actual_rpm > 3000 && actual_rpm <= rpm3)
+            {
+                panel1.Visible = true;
+                panel2.Visible = true;
+                panel3.Visible = true;
+                panel4.Visible = true;
+                panel5.Visible = true;
+                panel6.Visible = true;
+                panel7.Visible = true;
+                panel8.Visible = true;
+                panel9.Visible = true;
+
+                //alsó korlát
+                var rpmBottom = rpm2;
+                //felső korlát
+                var rpmTop = rpm3;
+
+                //megmondom mennyi az rpm különbség amit 6 részre osztok
+                var diff = rpmTop - rpmBottom;
+
+                var rpmPercent = actual_rpm / (maxRpm / 100);
+
+                //felosztás
+                var oneFourth = diff / 4;
+
+                //
+                var percent1 = (rpmBottom + oneFourth) / (maxRpm / 100);
+                var percent2 = (rpmBottom + oneFourth * 2) / (maxRpm / 100);
+                var percent3 = (rpmBottom + oneFourth * 3) / (maxRpm / 100);
+                var percent4 = (rpmBottom + oneFourth * 3) / (maxRpm / 100);
+
+                //1
+                if (rpmPercent < percent1 && rpmPercent >= rpmBottom)
+                {
+                    panel10.Visible = true;
+                    panel11.Visible = false;
+                    panel12.Visible = false;
+                    panel13.Visible = false;
+                }
+                else if (rpmPercent > percent1 && rpmPercent < percent2)
+                {
+                    panel10.Visible = true;
+                    panel11.Visible = true;
+                    panel12.Visible = false;
+                    panel13.Visible = false;
+                }
+                else if (rpmPercent > percent2 && rpmPercent < percent3)
+                {
+                    panel10.Visible = true;
+                    panel11.Visible = true;
+                    panel12.Visible = true;
+                    panel13.Visible = true;
+                }
+
+
+                panel14.Visible = false;
+                panel15.Visible = false;
+                panel16.Visible = false;
+                panel17.Visible = false;
+                panel18.Visible = false;
+                panel19.Visible = false;
+                panel20.Visible = false;
+                panel21.Visible = false;
+                panel22.Visible = false;
+                panel23.Visible = false;
+            }
+            else if (actual_rpm > 4000 && actual_rpm <= rpm4)
+            {
+                panel1.Visible = true;
+                panel2.Visible = true;
+                panel3.Visible = true;
+                panel4.Visible = true;
+                panel5.Visible = true;
+                panel6.Visible = true;
+                panel7.Visible = true;
+                panel8.Visible = true;
+                panel9.Visible = true;
+                panel10.Visible = true;
+                panel11.Visible = true;
+                panel12.Visible = true;
+                panel13.Visible = true;
+
+                //alsó korlát
+                var rpmBottom = rpm3;
+                //felső korlát
+                var rpmTop = rpm4;
+
+                //megmondom mennyi az rpm különbség amit 6 részre osztok
+                var diff = rpmTop - rpmBottom;
+
+                var rpmPercent = actual_rpm / (maxRpm / 100);
+                //felosztás
+                var oneFourth = diff / 4;
+
+                //
+                var percent1 = (rpmBottom + oneFourth) / (maxRpm / 100);
+                var percent2 = (rpmBottom + oneFourth * 2) / (maxRpm / 100);
+                var percent3 = (rpmBottom + oneFourth * 3) / (maxRpm / 100);
+                var percent4 = (rpmBottom + oneFourth * 4) / (maxRpm / 100);
+
+                //1
+                if (rpmPercent < percent1 && rpmPercent >= rpmBottom)
+                {
+                    panel14.Visible = true;
+                    panel15.Visible = false;
+                    panel16.Visible = false;
+                    panel17.Visible = false;
+                }
+                else if (rpmPercent > percent1 && rpmPercent < percent2)
+                {
+                    panel14.Visible = true;
+                    panel15.Visible = true;
+                    panel16.Visible = false;
+                    panel17.Visible = false;
+                }
+                else if (rpmPercent > percent2 && rpmPercent < percent3)
+                {
+                    panel14.Visible = true;
+                    panel15.Visible = true;
+                    panel16.Visible = true;
+                    panel17.Visible = false;
+                }
+                else if (rpmPercent > percent3 && rpmPercent < percent4)
+                {
+                    panel14.Visible = true;
+                    panel15.Visible = true;
+                    panel16.Visible = true;
+                    panel17.Visible = true;
+                }
+
+                panel18.Visible = false;
+                panel19.Visible = false;
+                panel20.Visible = false;
+                panel21.Visible = false;
+                panel22.Visible = false;
+                panel23.Visible = false;
+            }
+            else if (actual_rpm > 5000 && actual_rpm <= rpm5)
+            {
+                panel1.Visible = true;
+                panel2.Visible = true;
+                panel3.Visible = true;
+                panel4.Visible = true;
+                panel5.Visible = true;
+                panel6.Visible = true;
+                panel7.Visible = true;
+                panel8.Visible = true;
+                panel9.Visible = true;
+                panel10.Visible = true;
+                panel11.Visible = true;
+                panel12.Visible = true;
+                panel13.Visible = true;
+                panel14.Visible = true;
+                panel15.Visible = true;
+                panel16.Visible = true;
+                panel17.Visible = true;
+
+                //alsó korlát
+                var rpmBottom = rpm4;
+                //felső korlát
+                var rpmTop = rpm5;
+
+                //megmondom mennyi az rpm különbség amit 6 részre osztok
+                var diff = rpmTop - rpmBottom;
+
+                var rpmPercent = actual_rpm / (maxRpm / 100);
+
+                //felosztás
+                var oneThird = diff / 3;
+
+                //
+                var percent1 = (rpmBottom + oneThird) / (maxRpm / 100);
+                var percent2 = (rpmBottom + oneThird * 2) / (maxRpm / 100);
+                var percent3 = (rpmBottom + oneThird * 3) / (maxRpm / 100);
+
+                //1
+                if (rpmPercent < percent1 && rpmPercent >= rpmBottom)
+                {
+                    panel18.Visible = true;
+                    panel19.Visible = false;
+                    panel20.Visible = false;
+                }
+                else if (rpmPercent > percent1 && rpmPercent < percent2)
+                {
+                    panel18.Visible = true;
+                    panel19.Visible = true;
+                    panel20.Visible = false;
+                }
+                else if (rpmPercent > percent2 && rpmPercent < percent3)
+                {
+                    panel18.Visible = true;
+                    panel19.Visible = true;
+                    panel20.Visible = true;
+                }
+
+                panel21.Visible = false;
+                panel22.Visible = false;
+                panel23.Visible = false;
+            }
+            else if (actual_rpm > 6000 && actual_rpm <= rpm6)
+            {
+                panel1.Visible = true;
+                panel2.Visible = true;
+                panel3.Visible = true;
+                panel4.Visible = true;
+                panel5.Visible = true;
+                panel6.Visible = true;
+                panel7.Visible = true;
+                panel8.Visible = true;
+                panel9.Visible = true;
+                panel10.Visible = true;
+                panel11.Visible = true;
+                panel12.Visible = true;
+                panel13.Visible = true;
+                panel14.Visible = true;
+                panel15.Visible = true;
+                panel16.Visible = true;
+                panel17.Visible = true;
+                panel18.Visible = true;
+                panel19.Visible = true;
+                panel20.Visible = true;
+
+                //alsó korlát
+                var rpmBottom = rpm5;
+                //felső korlát
+                var rpmTop = rpm6;
+
+                //megmondom mennyi az rpm különbség amit 6 részre osztok
+                var diff = rpmTop - rpmBottom;
+
+                var rpmPercent = actual_rpm / (maxRpm / 100);
+
+                //felosztás
+                var oneThird = diff / 3;
+
+                //
+                var percent1 = (rpmBottom + oneThird) / (maxRpm / 100);
+                var percent2 = (rpmBottom + oneThird * 2) / (maxRpm / 100);
+                var percent3 = (rpmBottom + oneThird * 3) / (maxRpm / 100);
+
+                //1
+                if (rpmPercent < percent1 && rpmPercent >= rpmBottom)
+                {
+                    panel21.Visible = true;
+                    panel22.Visible = false;
+                    panel23.Visible = false;
+                }
+                else if (rpmPercent > percent1 && rpmPercent < percent2)
+                {
+                    panel21.Visible = true;
+                    panel22.Visible = true;
+                    panel23.Visible = false;
+                }
+                else if (rpmPercent > percent2 && rpmPercent < percent3)
+                {
+                    panel21.Visible = true;
+                    panel22.Visible = true;
+                    panel23.Visible = true;
+                }
+            }
+            else if (actual_rpm > rpm6)
+            {
+                panel1.Visible = true;
+                panel2.Visible = true;
+                panel3.Visible = true;
+                panel4.Visible = true;
+                panel5.Visible = true;
+                panel6.Visible = true;
+                panel7.Visible = true;
+                panel8.Visible = true;
+                panel9.Visible = true;
+                panel10.Visible = true;
+                panel11.Visible = true;
+                panel12.Visible = true;
+                panel13.Visible = true;
+                panel14.Visible = true;
+                panel15.Visible = true;
+                panel16.Visible = true;
+                panel17.Visible = true;
+                panel18.Visible = true;
+                panel19.Visible = true;
+                panel20.Visible = true;
+                panel21.Visible = true;
+                panel22.Visible = true;
+                panel23.Visible = true;
             }
 
         }

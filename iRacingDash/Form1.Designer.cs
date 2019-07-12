@@ -84,9 +84,12 @@
             this.panel9 = new System.Windows.Forms.Panel();
             this.traction1_title = new System.Windows.Forms.Label();
             this.traction1_value = new System.Windows.Forms.Label();
-            this.panel10 = new System.Windows.Forms.Panel();
             this.traction2_title = new System.Windows.Forms.Label();
             this.traction2_value = new System.Windows.Forms.Label();
+            this.warning_panel = new System.Windows.Forms.Panel();
+            this.fuel_to_finish_text = new System.Windows.Forms.Label();
+            this.fuel_to_finish_value = new System.Windows.Forms.Label();
+            this.panel10 = new System.Windows.Forms.Panel();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel3.SuspendLayout();
@@ -122,6 +125,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox12)).BeginInit();
             this.panel6.SuspendLayout();
             this.panel9.SuspendLayout();
+            this.warning_panel.SuspendLayout();
             this.panel10.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -437,7 +441,7 @@
             this.Fuel_to_fill_value.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
             this.Fuel_to_fill_value.Location = new System.Drawing.Point(0, 0);
             this.Fuel_to_fill_value.Name = "Fuel_to_fill_value";
-            this.Fuel_to_fill_value.Size = new System.Drawing.Size(121, 35);
+            this.Fuel_to_fill_value.Size = new System.Drawing.Size(121, 36);
             this.Fuel_to_fill_value.TabIndex = 27;
             this.Fuel_to_fill_value.Text = "N/A";
             this.Fuel_to_fill_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -457,32 +461,33 @@
             this.Fuel_to_fill_title.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.Fuel_to_fill_title.Font = new System.Drawing.Font("Microsoft YaHei", 9.75F, System.Drawing.FontStyle.Bold);
             this.Fuel_to_fill_title.ForeColor = System.Drawing.Color.Gold;
-            this.Fuel_to_fill_title.Location = new System.Drawing.Point(0, 27);
+            this.Fuel_to_fill_title.Location = new System.Drawing.Point(0, 28);
             this.Fuel_to_fill_title.Name = "Fuel_to_fill_title";
-            this.Fuel_to_fill_title.Size = new System.Drawing.Size(121, 21);
+            this.Fuel_to_fill_title.Size = new System.Drawing.Size(121, 20);
             this.Fuel_to_fill_title.TabIndex = 28;
             this.Fuel_to_fill_title.Text = "Fuel to add";
             this.Fuel_to_fill_title.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // panel8
             // 
-            this.panel8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
+            this.panel8.BackColor = System.Drawing.Color.Transparent;
             this.panel8.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel8.Controls.Add(this.Delta_value);
             this.panel8.ForeColor = System.Drawing.SystemColors.ControlText;
             this.panel8.Location = new System.Drawing.Point(7, 127);
             this.panel8.Name = "panel8";
-            this.panel8.Size = new System.Drawing.Size(147, 50);
+            this.panel8.Size = new System.Drawing.Size(100, 50);
             this.panel8.TabIndex = 11;
             // 
             // Delta_value
             // 
+            this.Delta_value.BackColor = System.Drawing.Color.Transparent;
             this.Delta_value.Dock = System.Windows.Forms.DockStyle.Top;
             this.Delta_value.Font = new System.Drawing.Font("Microsoft YaHei", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.Delta_value.ForeColor = System.Drawing.Color.White;
             this.Delta_value.Location = new System.Drawing.Point(0, 0);
             this.Delta_value.Name = "Delta_value";
-            this.Delta_value.Size = new System.Drawing.Size(145, 50);
+            this.Delta_value.Size = new System.Drawing.Size(98, 48);
             this.Delta_value.TabIndex = 9;
             this.Delta_value.Text = "N/A";
             this.Delta_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -493,7 +498,7 @@
             this.Pit_limiter_background_panel.Controls.Add(this.Pit_Limiter_title);
             this.Pit_limiter_background_panel.Controls.Add(this.speed_limiter);
             this.Pit_limiter_background_panel.ForeColor = System.Drawing.Color.Orange;
-            this.Pit_limiter_background_panel.Location = new System.Drawing.Point(0, 66);
+            this.Pit_limiter_background_panel.Location = new System.Drawing.Point(-1, 64);
             this.Pit_limiter_background_panel.Name = "Pit_limiter_background_panel";
             this.Pit_limiter_background_panel.Size = new System.Drawing.Size(377, 58);
             this.Pit_limiter_background_panel.TabIndex = 26;
@@ -505,7 +510,7 @@
             this.Pit_Limiter_title.BackColor = System.Drawing.Color.Transparent;
             this.Pit_Limiter_title.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Bold);
             this.Pit_Limiter_title.ForeColor = System.Drawing.Color.Black;
-            this.Pit_Limiter_title.Location = new System.Drawing.Point(154, -1);
+            this.Pit_Limiter_title.Location = new System.Drawing.Point(152, -1);
             this.Pit_Limiter_title.Name = "Pit_Limiter_title";
             this.Pit_Limiter_title.Size = new System.Drawing.Size(70, 22);
             this.Pit_Limiter_title.TabIndex = 0;
@@ -518,7 +523,7 @@
             this.speed_limiter.BackColor = System.Drawing.Color.Transparent;
             this.speed_limiter.Font = new System.Drawing.Font("Microsoft YaHei", 23F, System.Drawing.FontStyle.Bold);
             this.speed_limiter.ForeColor = System.Drawing.Color.Black;
-            this.speed_limiter.Location = new System.Drawing.Point(28, 17);
+            this.speed_limiter.Location = new System.Drawing.Point(26, 17);
             this.speed_limiter.Name = "speed_limiter";
             this.speed_limiter.Size = new System.Drawing.Size(312, 40);
             this.speed_limiter.TabIndex = 1;
@@ -670,8 +675,10 @@
             // 
             this.panel9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
             this.panel9.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel9.Controls.Add(this.traction1_title);
             this.panel9.Controls.Add(this.traction1_value);
+            this.panel9.Controls.Add(this.traction2_title);
+            this.panel9.Controls.Add(this.traction1_title);
+            this.panel9.Controls.Add(this.traction2_value);
             this.panel9.ForeColor = System.Drawing.SystemColors.ControlText;
             this.panel9.Location = new System.Drawing.Point(157, 72);
             this.panel9.Name = "panel9";
@@ -680,63 +687,93 @@
             // 
             // traction1_title
             // 
-            this.traction1_title.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.traction1_title.Font = new System.Drawing.Font("Microsoft YaHei", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.traction1_title.ForeColor = System.Drawing.Color.OrangeRed;
-            this.traction1_title.Location = new System.Drawing.Point(0, 29);
+            this.traction1_title.Location = new System.Drawing.Point(4, 29);
             this.traction1_title.Name = "traction1_title";
-            this.traction1_title.Size = new System.Drawing.Size(76, 19);
+            this.traction1_title.Size = new System.Drawing.Size(39, 19);
             this.traction1_title.TabIndex = 0;
             this.traction1_title.Text = "TC1";
             this.traction1_title.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // traction1_value
             // 
-            this.traction1_value.Dock = System.Windows.Forms.DockStyle.Top;
-            this.traction1_value.Font = new System.Drawing.Font("Microsoft YaHei", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.traction1_value.BackColor = System.Drawing.Color.Transparent;
+            this.traction1_value.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Bold);
             this.traction1_value.ForeColor = System.Drawing.Color.OrangeRed;
-            this.traction1_value.Location = new System.Drawing.Point(0, 0);
+            this.traction1_value.Location = new System.Drawing.Point(-2, -1);
             this.traction1_value.Name = "traction1_value";
-            this.traction1_value.Size = new System.Drawing.Size(76, 36);
+            this.traction1_value.Size = new System.Drawing.Size(47, 36);
             this.traction1_value.TabIndex = 1;
-            this.traction1_value.Text = "N/A";
+            this.traction1_value.Text = "0";
             this.traction1_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // panel10
-            // 
-            this.panel10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
-            this.panel10.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel10.Controls.Add(this.traction2_title);
-            this.panel10.Controls.Add(this.traction2_value);
-            this.panel10.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.panel10.Location = new System.Drawing.Point(156, 127);
-            this.panel10.Name = "panel10";
-            this.panel10.Size = new System.Drawing.Size(78, 50);
-            this.panel10.TabIndex = 14;
             // 
             // traction2_title
             // 
-            this.traction2_title.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.traction2_title.Font = new System.Drawing.Font("Microsoft YaHei", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.traction2_title.ForeColor = System.Drawing.Color.OrangeRed;
-            this.traction2_title.Location = new System.Drawing.Point(0, 29);
+            this.traction2_title.Location = new System.Drawing.Point(36, 29);
             this.traction2_title.Name = "traction2_title";
-            this.traction2_title.Size = new System.Drawing.Size(76, 19);
+            this.traction2_title.Size = new System.Drawing.Size(38, 19);
             this.traction2_title.TabIndex = 12;
             this.traction2_title.Text = "TC2";
             this.traction2_title.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // traction2_value
             // 
-            this.traction2_value.Dock = System.Windows.Forms.DockStyle.Top;
-            this.traction2_value.Font = new System.Drawing.Font("Microsoft YaHei", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.traction2_value.BackColor = System.Drawing.Color.Transparent;
+            this.traction2_value.Font = new System.Drawing.Font("Microsoft YaHei", 12F, System.Drawing.FontStyle.Bold);
             this.traction2_value.ForeColor = System.Drawing.Color.OrangeRed;
-            this.traction2_value.Location = new System.Drawing.Point(0, 0);
+            this.traction2_value.Location = new System.Drawing.Point(32, -1);
             this.traction2_value.Name = "traction2_value";
-            this.traction2_value.Size = new System.Drawing.Size(76, 37);
+            this.traction2_value.Size = new System.Drawing.Size(49, 37);
             this.traction2_value.TabIndex = 7;
-            this.traction2_value.Text = "N/A";
+            this.traction2_value.Text = "0";
             this.traction2_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // warning_panel
+            // 
+            this.warning_panel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
+            this.warning_panel.Controls.Add(this.panel10);
+            this.warning_panel.Location = new System.Drawing.Point(1, 66);
+            this.warning_panel.Name = "warning_panel";
+            this.warning_panel.Size = new System.Drawing.Size(373, 115);
+            this.warning_panel.TabIndex = 40;
+            // 
+            // fuel_to_finish_text
+            // 
+            this.fuel_to_finish_text.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.fuel_to_finish_text.Font = new System.Drawing.Font("Microsoft YaHei", 9.75F, System.Drawing.FontStyle.Bold);
+            this.fuel_to_finish_text.ForeColor = System.Drawing.Color.Gold;
+            this.fuel_to_finish_text.Location = new System.Drawing.Point(0, 28);
+            this.fuel_to_finish_text.Name = "fuel_to_finish_text";
+            this.fuel_to_finish_text.Size = new System.Drawing.Size(121, 20);
+            this.fuel_to_finish_text.TabIndex = 28;
+            this.fuel_to_finish_text.Text = "Fuel to finish";
+            this.fuel_to_finish_text.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // fuel_to_finish_value
+            // 
+            this.fuel_to_finish_value.BackColor = System.Drawing.Color.Transparent;
+            this.fuel_to_finish_value.Dock = System.Windows.Forms.DockStyle.Top;
+            this.fuel_to_finish_value.Font = new System.Drawing.Font("Microsoft YaHei", 18F, System.Drawing.FontStyle.Bold);
+            this.fuel_to_finish_value.ForeColor = System.Drawing.Color.White;
+            this.fuel_to_finish_value.Location = new System.Drawing.Point(0, 0);
+            this.fuel_to_finish_value.Name = "fuel_to_finish_value";
+            this.fuel_to_finish_value.Size = new System.Drawing.Size(121, 36);
+            this.fuel_to_finish_value.TabIndex = 27;
+            this.fuel_to_finish_value.Text = "N/A";
+            this.fuel_to_finish_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // panel10
+            // 
+            this.panel10.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel10.Controls.Add(this.fuel_to_finish_text);
+            this.panel10.Controls.Add(this.fuel_to_finish_value);
+            this.panel10.Location = new System.Drawing.Point(110, 62);
+            this.panel10.Name = "panel10";
+            this.panel10.Size = new System.Drawing.Size(123, 50);
+            this.panel10.TabIndex = 29;
             // 
             // Form1
             // 
@@ -746,7 +783,6 @@
             this.ClientSize = new System.Drawing.Size(370, 299);
             this.Controls.Add(this.Pit_limiter_background_panel);
             this.Controls.Add(this.panel9);
-            this.Controls.Add(this.panel10);
             this.Controls.Add(this.panel8);
             this.Controls.Add(this.led3_3);
             this.Controls.Add(this.led3_2);
@@ -780,6 +816,7 @@
             this.Controls.Add(this.pictureBox11);
             this.Controls.Add(this.pictureBox12);
             this.Controls.Add(this.panel6);
+            this.Controls.Add(this.warning_panel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Location = new System.Drawing.Point(750, 650);
@@ -827,6 +864,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox12)).EndInit();
             this.panel6.ResumeLayout(false);
             this.panel9.ResumeLayout(false);
+            this.warning_panel.ResumeLayout(false);
             this.panel10.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -866,7 +904,6 @@
         private System.Windows.Forms.Label Fuel_to_fill_value;
         private System.Windows.Forms.Panel panel7;
         private System.Windows.Forms.Label Fuel_to_fill_title;
-        private System.Windows.Forms.Panel panel8;
         private System.Windows.Forms.Label Delta_value;
         private System.Windows.Forms.Panel Pit_limiter_background_panel;
         private System.Windows.Forms.Label Pit_Limiter_title;
@@ -889,9 +926,13 @@
         private System.Windows.Forms.Panel panel9;
         private System.Windows.Forms.Label traction1_title;
         private System.Windows.Forms.Label traction1_value;
-        private System.Windows.Forms.Panel panel10;
         private System.Windows.Forms.Label traction2_title;
         private System.Windows.Forms.Label traction2_value;
+        private System.Windows.Forms.Panel panel8;
+        private System.Windows.Forms.Panel warning_panel;
+        private System.Windows.Forms.Panel panel10;
+        private System.Windows.Forms.Label fuel_to_finish_text;
+        private System.Windows.Forms.Label fuel_to_finish_value;
     }
 }
 
