@@ -54,6 +54,9 @@ namespace iRacingDash
         private int flashingFps = 2;
         private int flashingFpsCounter = 0;
 
+        private int settingPanelFps = 2;
+        private int settingPanelFpsCounter = -1;
+
 
         //*FUEL
         private float maxFuelOfCar = 0;
@@ -79,6 +82,25 @@ namespace iRacingDash
         //Delta
         private int deltaLimit = 2;
 
+        //Panelek
+        private Panel settingsPanel;
+
+        private Label settingLabelTitle;
+        private Label settingLabelValue;
+
+
+        //Settings on car
+        private int boost;
+        private int boostTemp = -1;
+
+        private int tractionControl1;
+        private int tractionControl1Temp = -1;
+
+        private int tractionControl2;
+        private int tractionControl2Temp = -1;
+
+        private float brakeBias;
+        private float brakeBiasTemp = -1;
 
         public Form1()
         {
@@ -103,13 +125,10 @@ namespace iRacingDash
             shiftLight2Percent = s.Configurate<int>("led", "config", "ShiftLightYellowPercent");
             redLinePercent = s.Configurate<int>("led", "config", "ShiftLightRedPercent");
 
-
             wrapper.Start();
             wrapper.TelemetryUpdateFrequency = s.Configurate<int>("fps", "config", "TelemetryFps");
             wrapper.TelemetryUpdated += OnTelemetryUpdated;
             wrapper.SessionInfoUpdated += OnSessionInfoUpdated;
-
-
 
             led1_1.Visible = false;
             led1_2.Visible = false;
@@ -126,6 +145,18 @@ namespace iRacingDash
 
             Laptime_value.ForeColor = Color.LawnGreen;
 
+            settingLabelTitle = CreateLabel("settingLabelTitle", "Setting", new Size(this.Width, 150), new Point(0, 0), Color.Black, new Font("Microsoft YaHei", 40, FontStyle.Bold), false);
+            settingLabelValue = CreateLabel("settingLabelValue", "Value", new Size(this.Width, 150), new Point(0, 150), Color.Black, new Font("Microsoft YaHei", 40, FontStyle.Bold), false);
+            settingLabelTitle.TextAlign = ContentAlignment.BottomCenter;
+            settingLabelValue.TextAlign = ContentAlignment.TopCenter;
+            settingLabelTitle.BringToFront();
+            settingLabelValue.BringToFront();
+
+            settingsPanel = CreateSettingWindow(new Point(0, 0), Color.DarkGray, new Size(this.Width, this.Height), false);
+            //panelek előtérbe helyezése
+            //settingsPanel.BringToFront();
+
+            
         }
 
 
@@ -139,10 +170,7 @@ namespace iRacingDash
             CalculateGear(e);
             CalculateFuel(e);
 
-            #region Set Brake bias
-            var brakebias = wrapper.GetData("dcBrakeBias");
-            Brake_bias_value.Text = string.Format("{0:00.00}", Convert.ToDouble(brakebias));
-            #endregion
+            
 
             remainingTime = e.TelemetryInfo.SessionTimeRemain.Value;
 
@@ -155,18 +183,7 @@ namespace iRacingDash
             engine_panel.Visible = engineWarning == 30 ? true : false;
             #endregion
 
-            #region Set Traction Control TC1, TC2
-            try
-            {
-                traction1_value.Text = Convert.ToInt32(wrapper.GetData("dcTractionControl")).ToString();
-                traction2_value.Text = Convert.ToInt32(wrapper.GetData("dcTractionControl2")).ToString();
-            }
-            catch (Exception ex)
-            {
-                traction1_value.Text = "N/A";
-                traction2_value.Text = "N/A";
-            }
-            #endregion
+
 
             if (DriverCarIdx != -9999)
                 position = e.TelemetryInfo.CarIdxPosition.Value[DriverCarIdx];
@@ -174,13 +191,44 @@ namespace iRacingDash
         }
 
 
+        private Panel CreateSettingWindow(Point location, Color color, Size size, bool visible)
+        {
+            Panel panel = new Panel();
+            panel.Location = location;
+            panel.BackColor = color;
+            panel.Size = size;
+            panel.Visible = visible;
+
+            if (!this.Controls.Contains(panel))
+                this.Controls.Add(panel);
+
+            return panel;
+            //settingsPanel.BringToFront();
+        }
+
+        private Label CreateLabel(string name, string text, Size size, Point location, Color color, Font font, bool visible)
+        {
+            Label label = new Label();
+            label.Text = text;
+            label.Location = location;
+            label.Visible = visible;
+            label.ForeColor = color;
+            label.Font = font;
+            label.Name = name;
+            label.Size = size;
+            label.BackColor = Color.DarkGray;
+
+            this.Controls.Add(label);
+
+            return label;
+        }
+
         private void WarningFlashes(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
             flashingFpsCounter = 0;
-            var sessionFlag = e.TelemetryInfo.SessionFlags.Value.ToString();
+            var sessionFlag = e.TelemetryInfo.SessionFlags.Value.ToString().Split();
 
             if (fuelLevel < 10)
-
 
                 if (sessionFlag.Contains("Blue"))
                 {
@@ -214,11 +262,14 @@ namespace iRacingDash
             if (fuelLevel < 10)
                 LightPanel(panel4, Color.DarkRed);
 
+            if (engineWarning == 30)
+            {
+                if (engine_value.Visible)
+                    engine_value.Visible = false;
+                else
+                    engine_value.Visible = true;
+            }
 
-            if (engine_value.Visible)
-                engine_value.Visible = false;
-            else
-                engine_value.Visible = true;
         }
 
 
@@ -241,6 +292,7 @@ namespace iRacingDash
             {
                 fpsCounter++;
                 flashingFpsCounter++;
+                settingPanelFpsCounter++;
 
                 //Folyamatosan frissülő adatok
                 sessionNumber = e.TelemetryInfo.SessionNum.Value;
@@ -251,6 +303,7 @@ namespace iRacingDash
                     //init sessionNum
                     sessionNumberTemp = sessionNumber;
                 }
+
 
 
                 if (sessionNumberTemp != sessionNumber || subSessionNumber != subSessionNumberTemp)
@@ -274,8 +327,8 @@ namespace iRacingDash
                     Brake_bias_value.Text = "N/A";
                     Speed_value.Text = "N/A";
                     Delta_value.Text = "N/A";
-                    traction1_value.Text = "N/A";
-                    traction2_value.Text = "N/A";
+                    //traction1_value.Text = "N/A";
+                    boost_value.Text = "N/A";
                     Laptime_value.Text = "00:00.000";
                     rpm.Text = "N/A";
                     gear.Text = "N";
@@ -295,12 +348,47 @@ namespace iRacingDash
                     NewLapCalculation(e);
 
 
-                    if (fpsCounter == wrapper.TelemetryUpdateFrequency / NonRTCalculationFPS)
+                    if (fpsCounter == (int)(wrapper.TelemetryUpdateFrequency / NonRTCalculationFPS))
                         NonRealtimeCalculations(e);
 
-                    if (flashingFpsCounter == wrapper.TelemetryUpdateFrequency / flashingFps)
+                    if (flashingFpsCounter == (int)(wrapper.TelemetryUpdateFrequency / flashingFps))
                         WarningFlashes(e);
 
+                    #region Set boost
+                    boost = Int32.Parse(wrapper.GetData("dcBoostLevel").ToString());
+                    boost_value.Text = boost.ToString();
+                    #endregion
+
+                    #region Set TC1 TC2
+                    tractionControl1 = Int32.Parse(wrapper.GetData("dcTractionControl").ToString());
+                    tractionControl2 = Int32.Parse(wrapper.GetData("dcTractionControl2").ToString());
+                    #endregion
+
+                    #region Set Brake bias
+                    brakeBias = float.Parse(wrapper.GetData("dcBrakeBias").ToString());
+                    Brake_bias_value.Text = string.Format("{0:00.00}", Convert.ToDouble(brakeBias));
+                    #endregion
+
+                    #region Init temp values for car settings
+                    if (boostTemp == -1)
+                        boostTemp = boost;
+
+                    if (tractionControl1Temp == -1)
+                        tractionControl1Temp = tractionControl1;
+
+                    if (tractionControl2Temp == -1)
+                        tractionControl2Temp = tractionControl2;
+
+                    if (brakeBiasTemp == -1)
+                        brakeBiasTemp = brakeBias;
+                    #endregion
+
+                    #region Any setting on car flashes here
+                    CarSettingPanelFlash(e, ref boost, ref boostTemp, "BOOST");
+                    CarSettingPanelFlash(e, ref tractionControl1, ref tractionControl1Temp, "TC1");
+                    CarSettingPanelFlash(e, ref tractionControl2, ref tractionControl2Temp, "TC2");
+                    CarSettingPanelFlash(e, ref brakeBias, ref brakeBiasTemp, "FRT BRB");
+                    #endregion
 
                     //az UpdateLapTime mögé kellett rakjam, hogy legyen egy temp kör szám, így az updatelaptimeban majd a legfrissebbel hasonlitja ezt ami előtte bennevolt
                     lapCountTemp = e.TelemetryInfo.Lap.Value;
@@ -308,10 +396,7 @@ namespace iRacingDash
 
                     //Textek kiirása
                     rpm.Text = Math.Round(e.TelemetryInfo.RPM.Value).ToString();
-
                 }
-
-
             }
             catch (Exception ex)
             {
@@ -320,6 +405,52 @@ namespace iRacingDash
                     errorLogger = new Logger(logPath + "\\" + dateInString + "\\errorLog.txt");
                 errorLogger.Log("OnSessionTelemetryUpdated Error", ex.Message);
             }
+        }
+
+        private void CarSettingPanelFlash<T>(SdkWrapper.TelemetryUpdatedEventArgs e, ref T actualValue, ref T valueTemp, string title)
+        {
+            #region Set Traction Control TC1, TC2, Boost
+            try
+            {
+                if (!actualValue.Equals(valueTemp))
+                {
+                    if (settingLabelTitle.Visible == false)
+                        settingPanelFpsCounter = 0;
+
+                    //panelek megjelenitése
+                    if (settingPanelFpsCounter <= (int)(wrapper.TelemetryUpdateFrequency / settingPanelFps))
+                    {
+                        settingLabelTitle.Text = title;
+                        if (actualValue.GetType() == typeof(float))
+                        {
+                            settingLabelValue.Text = string.Format("{0:0.00}", actualValue);
+                        }
+                        else
+                        {
+                            settingLabelValue.Text = actualValue.ToString();
+                        }
+                        
+
+                        //settingsPanel.Visible = true;
+                        settingLabelTitle.Visible = true;
+                        settingLabelValue.Visible = true;
+                    }
+                    else
+                    {
+                        //settingsPanel.Visible = false;
+                        settingLabelTitle.Visible = false;
+                        settingLabelValue.Visible = false;
+                        settingPanelFpsCounter = 0;
+                        valueTemp = actualValue;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                settingLabelTitle.Text = title;
+                settingLabelValue.Text = "N/A";
+            }
+            #endregion
         }
 
         private void InPitsV2(SdkWrapper.TelemetryUpdatedEventArgs e)
@@ -344,8 +475,6 @@ namespace iRacingDash
                 Pit_Limiter_title.Visible = false;
                 Pit_limiter_background_panel.Visible = false;
             }
-
-
         }
 
         private void CalculateGear(SdkWrapper.TelemetryUpdatedEventArgs e)
@@ -779,8 +908,8 @@ namespace iRacingDash
                     Brake_bias_value.Text = "N/A";
                     Speed_value.Text = "N/A";
                     Delta_value.Text = "N/A";
-                    traction1_value.Text = "N/A";
-                    traction2_value.Text = "N/A";
+                    //traction1_value.Text = "N/A";
+                    boost_value.Text = "N/A";
                     Laptime_value.Text = "00:00.000";
                     rpm.Text = "N/A";
                     gear.Text = "N";
