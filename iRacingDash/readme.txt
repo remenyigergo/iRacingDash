@@ -33,6 +33,7 @@
 	ShiftLightRedPercent - same as before
 
 2.1.4) Log
+	First, put the externalConfig files next to the .exe files. (WECOverlay and iRacingDash)
 	Logging values to folders if any error or miscalculation were made.
 
 	Path - path to any folder. Default for me is C:\User\<user>\Documents\iRacingDash\logs
