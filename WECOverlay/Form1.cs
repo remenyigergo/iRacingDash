@@ -17,8 +17,13 @@ namespace WECOverlay
         //Instantiates
         private SdkWrapper wrapper;
 
+        private static DateTime now = DateTime.Now;
         Turn turn = new Turn();
         private static Configurator s = new Configurator();
+
+        public static string logPath = s.Configurate<string>("log", "config", "Path");
+        public static string dateInString = now.ToString().Replace(' ', '-').Replace('/', '-').Replace(':', '-');
+        private Logger errorLogger;
 
         //Common
         private int driverCarIdx;
@@ -40,8 +45,9 @@ namespace WECOverlay
         private string classImagesPath = s.Configurate<string>("classImages", "config", "Path");
 
         //Session
-        private int sessionNumber;
+        private bool sessionChanged = false;
 
+        private int sessionNumber;
         private int sessionNumberTemp = -1;
 
         private int subSessionNumber;
@@ -58,7 +64,7 @@ namespace WECOverlay
         int rpm4 = 5000;
         int rpm5 = 6000;
         int rpm6 = 7000;
-        private bool pictureLedEnabled = false;
+        private bool pictureLedEnabled = s.Configurate<bool>("led", "config", "pictureLedEnabled");
         private float actual_rpm;
         private float maxRpm = 7300;
 
@@ -180,7 +186,7 @@ namespace WECOverlay
                 {
                     try
                     {
-                        
+                        //for resetting variables
                         sessionNumberTemp = sessionNumber;
                     }
                     catch (Exception ex)
@@ -193,12 +199,11 @@ namespace WECOverlay
                 {
                     Turns.Clear();
                     trackSet = false;
-                    //trackId = -1;
                 }
 
 
                 CalculateGear(e);
-                var speedinKmh = (int) (e.TelemetryInfo.Speed.Value * 3.6);
+                var speedinKmh = (int)(e.TelemetryInfo.Speed.Value * 3.6);
                 speed_value.Text = speedinKmh.ToString();
                 sessionNumber = e.TelemetryInfo.SessionNum.Value;
                 position.Text = e.TelemetryInfo.CarIdxClassPosition.Value[driverCarIdx].ToString();
@@ -217,23 +222,27 @@ namespace WECOverlay
                     NonRtCalculation(e);
 
                 //adott classon belüli kép megjelenitése
-                SetClassColor(e);
+                if (sessionChanged)
+                    SetClassColor(e);
 
                 //2 mód van benne. A ledek vagy képekből vagy panelekből épülnek fel
                 if (pictureLedEnabled)
-                {
                     ShiftLights(e);
-                }
                 else
-                {
                     ShiftLightsPanels(e);
-                }
 
                 //Pedálok két képe mozgatása
                 Pedals(e);
+
+                //A Class szinezéshez állítgatom
+                sessionChanged = false;
             }
             catch (Exception ex)
             {
+                if (errorLogger == null)
+                    errorLogger = new Logger(logPath + "\\" + dateInString + "\\errorLog.txt");
+
+                errorLogger.Log("OnSessionTelemetryUpdated Error", ex.Message);
             }
         }
 
@@ -274,8 +283,8 @@ namespace WECOverlay
             var widthThrottle = (throttleUnit / 100) * throttlePercent;
             var widthBrake = (brakeUnit / 100) * brakePercent;
 
-            throttle.Size = new Size(12 + (int) (throttleUnit * widthThrottle), 33);
-            brake.Size = new Size(18 + (int) (brakeUnit * widthBrake), 39);
+            throttle.Size = new Size(12 + (int)(throttleUnit * widthThrottle), 33);
+            brake.Size = new Size(18 + (int)(brakeUnit * widthBrake), 39);
         }
 
         private void CalculateGear(SdkWrapper.TelemetryUpdatedEventArgs e)
@@ -296,29 +305,34 @@ namespace WECOverlay
             {
                 subSessionNumber = Int32.Parse(e.SessionInfo["WeekendInfo"]["SubSessionID"].Value);
 
+                #region Init subSessionNumberTemp
                 if (subSessionNumberTemp == -1)
                 {
                     //init SubSessionIdTemp
                     subSessionNumberTemp = subSessionNumber;
                 }
+                #endregion
 
+                #region On Session Change
                 if (sessionNumberTemp != sessionNumber || subSessionNumber != subSessionNumberTemp)
                 {
-                    
+                    sessionChanged = true;
+
                     subSessionNumberTemp = subSessionNumber;
                 }
+                #endregion
 
-                //sima pályaváltáskor
+                #region On Track Change
                 if (trackId != trackIdTemp)
                 {
-                    if(Turns != null)
+                    if (Turns != null)
                         Turns.Clear();
                     trackSet = false;
-                    //trackId = -1;
                 }
+                #endregion
+
 
                 trackId = Int32.Parse(e.SessionInfo["WeekendInfo"]["TrackID"].Value);
-
                 driverCarIdx = Int32.Parse(e.SessionInfo["DriverInfo"]["DriverCarIdx"].Value);
                 carNumber = Int32.Parse(e.SessionInfo["DriverInfo"]["Drivers"]["CarIdx", driverCarIdx]["CarNumber"]
                     .Value);
@@ -330,12 +344,15 @@ namespace WECOverlay
                 if (isMaxRpmValid)
                     maxRpm = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarRedLine"].Value);
 
-
                 car_number_value.Text = carNumber.ToString();
                 team_name_value.Text = teamName;
             }
             catch (Exception ex)
             {
+                if (errorLogger == null)
+                    errorLogger = new Logger(logPath + "\\" + dateInString + "\\errorLog.txt");
+
+                errorLogger.Log("OnSessionInfoUpdated Error", ex.Message);
             }
         }
 
@@ -569,13 +586,13 @@ namespace WECOverlay
 
                 var rpmPercent = actual_rpm / (maxRpm / 100);
                 //felosztás
-                var oneFifth = diff / 4;
+                var oneFourth = diff / 4;
 
                 //
-                var percent1 = (rpmBottom + oneFifth) / (maxRpm / 100);
-                var percent2 = (rpmBottom + oneFifth * 2) / (maxRpm / 100);
-                var percent3 = (rpmBottom + oneFifth * 3) / (maxRpm / 100);
-                var percent4 = (rpmBottom + oneFifth * 4) / (maxRpm / 100);
+                var percent1 = (rpmBottom + oneFourth) / (maxRpm / 100);
+                var percent2 = (rpmBottom + oneFourth * 2) / (maxRpm / 100);
+                var percent3 = (rpmBottom + oneFourth * 3) / (maxRpm / 100);
+                var percent4 = (rpmBottom + oneFourth * 4) / (maxRpm / 100);
 
                 //1
                 if (rpmPercent < percent1 && rpmPercent >= rpmBottom)

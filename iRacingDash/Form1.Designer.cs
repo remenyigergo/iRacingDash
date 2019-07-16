@@ -61,7 +61,7 @@
             this.Fuel_to_fill_value = new System.Windows.Forms.Label();
             this.panel7 = new System.Windows.Forms.Panel();
             this.Fuel_to_fill_title = new System.Windows.Forms.Label();
-            this.panel8 = new System.Windows.Forms.Panel();
+            this.delta_panel = new System.Windows.Forms.Panel();
             this.Delta_value = new System.Windows.Forms.Label();
             this.Pit_limiter_background_panel = new System.Windows.Forms.Panel();
             this.Pit_Limiter_title = new System.Windows.Forms.Label();
@@ -82,14 +82,16 @@
             this.Last_lap_title = new System.Windows.Forms.Label();
             this.Last_lap_value = new System.Windows.Forms.Label();
             this.panel9 = new System.Windows.Forms.Panel();
-            this.traction1_title = new System.Windows.Forms.Label();
             this.traction1_value = new System.Windows.Forms.Label();
             this.traction2_title = new System.Windows.Forms.Label();
+            this.traction1_title = new System.Windows.Forms.Label();
             this.traction2_value = new System.Windows.Forms.Label();
             this.warning_panel = new System.Windows.Forms.Panel();
+            this.panel10 = new System.Windows.Forms.Panel();
             this.fuel_to_finish_text = new System.Windows.Forms.Label();
             this.fuel_to_finish_value = new System.Windows.Forms.Label();
-            this.panel10 = new System.Windows.Forms.Panel();
+            this.engine_panel = new System.Windows.Forms.Panel();
+            this.engine_value = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel3.SuspendLayout();
@@ -109,7 +111,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.led3_2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.led3_3)).BeginInit();
             this.panel7.SuspendLayout();
-            this.panel8.SuspendLayout();
+            this.delta_panel.SuspendLayout();
             this.Pit_limiter_background_panel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
@@ -127,6 +129,7 @@
             this.panel9.SuspendLayout();
             this.warning_panel.SuspendLayout();
             this.panel10.SuspendLayout();
+            this.engine_panel.SuspendLayout();
             this.SuspendLayout();
             // 
             // Speed_title
@@ -468,26 +471,26 @@
             this.Fuel_to_fill_title.Text = "Fuel to add";
             this.Fuel_to_fill_title.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // panel8
+            // delta_panel
             // 
-            this.panel8.BackColor = System.Drawing.Color.Transparent;
-            this.panel8.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel8.Controls.Add(this.Delta_value);
-            this.panel8.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.panel8.Location = new System.Drawing.Point(7, 127);
-            this.panel8.Name = "panel8";
-            this.panel8.Size = new System.Drawing.Size(100, 50);
-            this.panel8.TabIndex = 11;
+            this.delta_panel.BackColor = System.Drawing.Color.Transparent;
+            this.delta_panel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.delta_panel.Controls.Add(this.Delta_value);
+            this.delta_panel.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.delta_panel.Location = new System.Drawing.Point(7, 127);
+            this.delta_panel.Name = "delta_panel";
+            this.delta_panel.Size = new System.Drawing.Size(100, 50);
+            this.delta_panel.TabIndex = 11;
             // 
             // Delta_value
             // 
             this.Delta_value.BackColor = System.Drawing.Color.Transparent;
             this.Delta_value.Dock = System.Windows.Forms.DockStyle.Top;
-            this.Delta_value.Font = new System.Drawing.Font("Microsoft YaHei", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.Delta_value.Font = new System.Drawing.Font("Microsoft YaHei", 17F, System.Drawing.FontStyle.Bold);
             this.Delta_value.ForeColor = System.Drawing.Color.White;
             this.Delta_value.Location = new System.Drawing.Point(0, 0);
             this.Delta_value.Name = "Delta_value";
-            this.Delta_value.Size = new System.Drawing.Size(98, 48);
+            this.Delta_value.Size = new System.Drawing.Size(98, 49);
             this.Delta_value.TabIndex = 9;
             this.Delta_value.Text = "N/A";
             this.Delta_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -685,17 +688,6 @@
             this.panel9.Size = new System.Drawing.Size(78, 50);
             this.panel9.TabIndex = 13;
             // 
-            // traction1_title
-            // 
-            this.traction1_title.Font = new System.Drawing.Font("Microsoft YaHei", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.traction1_title.ForeColor = System.Drawing.Color.OrangeRed;
-            this.traction1_title.Location = new System.Drawing.Point(4, 29);
-            this.traction1_title.Name = "traction1_title";
-            this.traction1_title.Size = new System.Drawing.Size(39, 19);
-            this.traction1_title.TabIndex = 0;
-            this.traction1_title.Text = "TC1";
-            this.traction1_title.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // traction1_value
             // 
             this.traction1_value.BackColor = System.Drawing.Color.Transparent;
@@ -719,6 +711,17 @@
             this.traction2_title.Text = "TC2";
             this.traction2_title.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // traction1_title
+            // 
+            this.traction1_title.Font = new System.Drawing.Font("Microsoft YaHei", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.traction1_title.ForeColor = System.Drawing.Color.OrangeRed;
+            this.traction1_title.Location = new System.Drawing.Point(4, 29);
+            this.traction1_title.Name = "traction1_title";
+            this.traction1_title.Size = new System.Drawing.Size(39, 19);
+            this.traction1_title.TabIndex = 0;
+            this.traction1_title.Text = "TC1";
+            this.traction1_title.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // traction2_value
             // 
             this.traction2_value.BackColor = System.Drawing.Color.Transparent;
@@ -739,6 +742,16 @@
             this.warning_panel.Name = "warning_panel";
             this.warning_panel.Size = new System.Drawing.Size(373, 115);
             this.warning_panel.TabIndex = 40;
+            // 
+            // panel10
+            // 
+            this.panel10.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel10.Controls.Add(this.fuel_to_finish_text);
+            this.panel10.Controls.Add(this.fuel_to_finish_value);
+            this.panel10.Location = new System.Drawing.Point(110, 62);
+            this.panel10.Name = "panel10";
+            this.panel10.Size = new System.Drawing.Size(123, 50);
+            this.panel10.TabIndex = 29;
             // 
             // fuel_to_finish_text
             // 
@@ -765,15 +778,25 @@
             this.fuel_to_finish_value.Text = "N/A";
             this.fuel_to_finish_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // panel10
+            // engine_panel
             // 
-            this.panel10.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel10.Controls.Add(this.fuel_to_finish_text);
-            this.panel10.Controls.Add(this.fuel_to_finish_value);
-            this.panel10.Location = new System.Drawing.Point(110, 62);
-            this.panel10.Name = "panel10";
-            this.panel10.Size = new System.Drawing.Size(123, 50);
-            this.panel10.TabIndex = 29;
+            this.engine_panel.BackColor = System.Drawing.Color.Red;
+            this.engine_panel.Controls.Add(this.engine_value);
+            this.engine_panel.Location = new System.Drawing.Point(-8, 63);
+            this.engine_panel.Name = "engine_panel";
+            this.engine_panel.Size = new System.Drawing.Size(381, 227);
+            this.engine_panel.TabIndex = 41;
+            // 
+            // engine_value
+            // 
+            this.engine_value.AutoSize = true;
+            this.engine_value.Font = new System.Drawing.Font("Microsoft YaHei", 25F, System.Drawing.FontStyle.Bold);
+            this.engine_value.ForeColor = System.Drawing.Color.White;
+            this.engine_value.Location = new System.Drawing.Point(76, 95);
+            this.engine_value.Name = "engine_value";
+            this.engine_value.Size = new System.Drawing.Size(229, 45);
+            this.engine_value.TabIndex = 0;
+            this.engine_value.Text = "ENGINE OFF";
             // 
             // Form1
             // 
@@ -781,9 +804,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
             this.ClientSize = new System.Drawing.Size(370, 299);
+            this.Controls.Add(this.engine_panel);
             this.Controls.Add(this.Pit_limiter_background_panel);
             this.Controls.Add(this.panel9);
-            this.Controls.Add(this.panel8);
+            this.Controls.Add(this.delta_panel);
             this.Controls.Add(this.led3_3);
             this.Controls.Add(this.led3_2);
             this.Controls.Add(this.led3_1);
@@ -847,7 +871,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.led3_2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.led3_3)).EndInit();
             this.panel7.ResumeLayout(false);
-            this.panel8.ResumeLayout(false);
+            this.delta_panel.ResumeLayout(false);
             this.Pit_limiter_background_panel.ResumeLayout(false);
             this.Pit_limiter_background_panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
@@ -866,6 +890,8 @@
             this.panel9.ResumeLayout(false);
             this.warning_panel.ResumeLayout(false);
             this.panel10.ResumeLayout(false);
+            this.engine_panel.ResumeLayout(false);
+            this.engine_panel.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -928,11 +954,13 @@
         private System.Windows.Forms.Label traction1_value;
         private System.Windows.Forms.Label traction2_title;
         private System.Windows.Forms.Label traction2_value;
-        private System.Windows.Forms.Panel panel8;
+        private System.Windows.Forms.Panel delta_panel;
         private System.Windows.Forms.Panel warning_panel;
         private System.Windows.Forms.Panel panel10;
         private System.Windows.Forms.Label fuel_to_finish_text;
         private System.Windows.Forms.Label fuel_to_finish_value;
+        private System.Windows.Forms.Panel engine_panel;
+        private System.Windows.Forms.Label engine_value;
     }
 }
 
