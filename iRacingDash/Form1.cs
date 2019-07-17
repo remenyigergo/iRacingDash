@@ -24,6 +24,7 @@ namespace iRacingDash
         private SdkWrapper wrapper;
         private iRacingSDK sdk;
 
+
         private delegate void SafeCallDelegate(bool visible);
         private static Configurator s = new Configurator();
         public static string logPath = s.Configurate<string>("logPath", "config", "Path");
@@ -95,6 +96,8 @@ namespace iRacingDash
         private Label settingLabelTitle;
         private Label settingLabelValue;
 
+        private Label idleClock;
+
 
         //Settings on car
         private int boost;
@@ -128,7 +131,7 @@ namespace iRacingDash
             //Window setup
             var X = s.Configurate<int>("window", "config", "PositionX");
             var Y = s.Configurate<int>("window", "config", "PositionY");
-            this.Location = new Point((int) X, (int) Y);
+            this.Location = new Point((int)X, (int)Y);
 
             //ShiftLights setup
             minRpmPercent = s.Configurate<int>("led", "config", "MinimumRPMPercent");
@@ -156,32 +159,27 @@ namespace iRacingDash
 
             Laptime_value.ForeColor = Color.LawnGreen;
 
+            //Create labels and panels
             settingLabelTitle = CreateLabel("settingLabelTitle", "Setting", new Size(this.Width, 150), new Point(0, 0),
-                Color.Black, new Font("Microsoft YaHei", 40, FontStyle.Bold), false);
+                Color.Black, Color.DarkGray, new Font("Microsoft YaHei", 40, FontStyle.Bold), false);
             settingLabelValue = CreateLabel("settingLabelValue", "Value", new Size(this.Width, 150), new Point(0, 150),
-                Color.Black, new Font("Microsoft YaHei", 40, FontStyle.Bold), false);
+                Color.Black, Color.DarkGray, new Font("Microsoft YaHei", 40, FontStyle.Bold), false);
             settingLabelTitle.TextAlign = ContentAlignment.BottomCenter;
             settingLabelValue.TextAlign = ContentAlignment.TopCenter;
-            settingLabelTitle.BringToFront();
-            settingLabelValue.BringToFront();
 
             settingsPanel = CreateSettingWindow(new Point(0, 0), Color.DarkGray, new Size(this.Width, this.Height),
                 false);
-            //panelek előtérbe helyezése
-            //settingsPanel.BringToFront();
+
 
             CreateIdle();
-            //CheckWrapperRunning();
+            
 
-            //new Thread(() =>
-            //    {
-            //        while (true)
-            //        {
-            //            CheckWrapperRunning();
-            //            Thread.Sleep(100);
-            //        }
-            //    }
-            //);
+            //panelek előtérbe helyezése
+            settingLabelTitle.BringToFront();
+            settingLabelValue.BringToFront();
+            
+            //settingsPanel.BringToFront();
+
 
             Thread t = new Thread(new ThreadStart(CheckWrapperRunning));
             t.Start();
@@ -198,7 +196,19 @@ namespace iRacingDash
             {
                 idleImg.Visible = visible;
             }
+
+            if (idleClock.InvokeRequired)
+            {
+                var d = new SafeCallDelegate(WriteTextSafe);
+                Invoke(d, new object[] { visible });
+            }
+            else
+            {
+                idleClock.Visible = visible;
+            }
+
         }
+
 
         private void SetText(bool value)
         {
@@ -207,17 +217,24 @@ namespace iRacingDash
 
         private void CheckWrapperRunning()
         {
+            idleClock.Text = string.Format("{0:00}:{1:00}",DateTime.Now.Hour, DateTime.Now.Minute);
             while (true)
             {
                 var isConnected = wrapper.IsConnected;
+
                 if (isConnected)
+                {
                     WriteTextSafe(false);
+                }
                 else
+                {
                     WriteTextSafe(true);
+                }
+
 
                 Thread.Sleep(1000);
             }
-            
+
         }
 
         private void CreateIdle()
@@ -232,7 +249,14 @@ namespace iRacingDash
             };
             this.Controls.Add(idleImg);
             idleImg.Visible = true;
+            
+
+            idleClock = CreateLabel("idleClock", "00:00", new Size(130, 50), new Point(120, 30), Color.White, Color.Transparent,
+                new Font("Microsoft YaHei", 30, FontStyle.Regular), true);
+            idleClock.Parent = idleImg;
+
             idleImg.BringToFront();
+            idleClock.BringToFront();
         }
 
 
@@ -282,18 +306,18 @@ namespace iRacingDash
             //settingsPanel.BringToFront();
         }
 
-        private Label CreateLabel(string name, string text, Size size, Point location, Color color, Font font,
+        private Label CreateLabel(string name, string text, Size size, Point location, Color foreColor, Color backColor, Font font,
             bool visible)
         {
             Label label = new Label();
             label.Text = text;
             label.Location = location;
             label.Visible = visible;
-            label.ForeColor = color;
+            label.ForeColor = foreColor;
+            label.BackColor = backColor;
             label.Font = font;
             label.Name = name;
             label.Size = size;
-            label.BackColor = Color.DarkGray;
 
             this.Controls.Add(label);
 
@@ -419,10 +443,10 @@ namespace iRacingDash
                     NewLapCalculation(e);
 
 
-                    if (fpsCounter == (int) (wrapper.TelemetryUpdateFrequency / NonRTCalculationFPS))
+                    if (fpsCounter == (int)(wrapper.TelemetryUpdateFrequency / NonRTCalculationFPS))
                         NonRealtimeCalculations(e);
 
-                    if (flashingFpsCounter == (int) (wrapper.TelemetryUpdateFrequency / flashingFps))
+                    if (flashingFpsCounter == (int)(wrapper.TelemetryUpdateFrequency / flashingFps))
                         WarningFlashes(e);
 
                     #region Set boost
@@ -500,7 +524,7 @@ namespace iRacingDash
                         settingPanelFpsCounter = 0;
 
                     //panelek megjelenitése
-                    if (settingPanelFpsCounter <= (int) (wrapper.TelemetryUpdateFrequency / settingPanelFps))
+                    if (settingPanelFpsCounter <= (int)(wrapper.TelemetryUpdateFrequency / settingPanelFps))
                     {
                         settingLabelTitle.Text = title;
                         if (actualValue.GetType() == typeof(float))
@@ -690,10 +714,10 @@ namespace iRacingDash
             var lapObject = wrapper.GetData("LapCurrentLapTime");
             var lap = Convert.ToDouble(lapObject);
 
-            int min = (int) (lap / 60);
-            int sec = (int) (lap % 60);
+            int min = (int)(lap / 60);
+            int sec = (int)(lap % 60);
 
-            double decimalPart = lap % (int) lap;
+            double decimalPart = lap % (int)lap;
 
             string laptime;
             laptime = decimalPart > 0
