@@ -177,7 +177,6 @@ namespace iRacingDash
             //panelek előtérbe helyezése
             settingLabelTitle.BringToFront();
             settingLabelValue.BringToFront();
-            
             //settingsPanel.BringToFront();
 
 
@@ -248,6 +247,11 @@ namespace iRacingDash
                 Image = image,
             };
             this.Controls.Add(idleImg);
+            idleImg.MouseDown += new MouseEventHandler(Idle_MouseDown);
+            idleImg.MouseUp+= new MouseEventHandler(Idle_MouseUp);
+            idleImg.MouseMove+= new MouseEventHandler(Idle_MouseMove);
+            idleImg.DoubleClick += new EventHandler(Idle_DoubleClick);
+
             idleImg.Visible = true;
             
 
@@ -1180,5 +1184,27 @@ namespace iRacingDash
         }
 
         #endregion
+
+        protected void Idle_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (!clicked)
+                clicked = true;
+        }
+
+        protected void Idle_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (clicked)
+                clicked = false;
+        }
+        protected void Idle_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (clicked)
+                this.Location = new Point(Location.X + e.X, Location.Y + e.Y);
+        }
+
+        protected void Idle_DoubleClick(object sender, EventArgs e)
+        {
+            Environment.Exit(0);
+        }
     }
 }
