@@ -4,8 +4,12 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Net.Mail;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using iRacingSdkWrapper;
@@ -20,6 +24,7 @@ namespace iRacingDash
         private SdkWrapper wrapper;
         private iRacingSDK sdk;
 
+        private delegate void SafeCallDelegate(bool visible);
         private static Configurator s = new Configurator();
         public static string logPath = s.Configurate<string>("logPath", "config", "Path");
         public static string dateInString = now.ToString().Replace(' ', '-').Replace('/', '-').Replace(':', '-');
@@ -30,6 +35,7 @@ namespace iRacingDash
 
         //LEDS
         private float minRpmPercent;
+
         private float shiftLight1Percent;
         private float shiftLight2Percent;
         private float redLinePercent;
@@ -77,6 +83,7 @@ namespace iRacingDash
 
         //köridők
         List<double> laptimes = new List<double>();
+
         float currentLap;
 
         //Delta
@@ -91,6 +98,7 @@ namespace iRacingDash
 
         //Settings on car
         private int boost;
+
         private int boostTemp = -1;
 
         private int tractionControl1;
@@ -101,6 +109,9 @@ namespace iRacingDash
 
         private float brakeBias;
         private float brakeBiasTemp = -1;
+
+        //
+        private PictureBox idleImg = new PictureBox();
 
         public Form1()
         {
@@ -117,7 +128,7 @@ namespace iRacingDash
             //Window setup
             var X = s.Configurate<int>("window", "config", "PositionX");
             var Y = s.Configurate<int>("window", "config", "PositionY");
-            this.Location = new Point((int)X, (int)Y);
+            this.Location = new Point((int) X, (int) Y);
 
             //ShiftLights setup
             minRpmPercent = s.Configurate<int>("led", "config", "MinimumRPMPercent");
@@ -145,49 +156,114 @@ namespace iRacingDash
 
             Laptime_value.ForeColor = Color.LawnGreen;
 
-            settingLabelTitle = CreateLabel("settingLabelTitle", "Setting", new Size(this.Width, 150), new Point(0, 0), Color.Black, new Font("Microsoft YaHei", 40, FontStyle.Bold), false);
-            settingLabelValue = CreateLabel("settingLabelValue", "Value", new Size(this.Width, 150), new Point(0, 150), Color.Black, new Font("Microsoft YaHei", 40, FontStyle.Bold), false);
+            settingLabelTitle = CreateLabel("settingLabelTitle", "Setting", new Size(this.Width, 150), new Point(0, 0),
+                Color.Black, new Font("Microsoft YaHei", 40, FontStyle.Bold), false);
+            settingLabelValue = CreateLabel("settingLabelValue", "Value", new Size(this.Width, 150), new Point(0, 150),
+                Color.Black, new Font("Microsoft YaHei", 40, FontStyle.Bold), false);
             settingLabelTitle.TextAlign = ContentAlignment.BottomCenter;
             settingLabelValue.TextAlign = ContentAlignment.TopCenter;
             settingLabelTitle.BringToFront();
             settingLabelValue.BringToFront();
 
-            settingsPanel = CreateSettingWindow(new Point(0, 0), Color.DarkGray, new Size(this.Width, this.Height), false);
+            settingsPanel = CreateSettingWindow(new Point(0, 0), Color.DarkGray, new Size(this.Width, this.Height),
+                false);
             //panelek előtérbe helyezése
             //settingsPanel.BringToFront();
 
+            CreateIdle();
+            //CheckWrapperRunning();
+
+            //new Thread(() =>
+            //    {
+            //        while (true)
+            //        {
+            //            CheckWrapperRunning();
+            //            Thread.Sleep(100);
+            //        }
+            //    }
+            //);
+
+            Thread t = new Thread(new ThreadStart(CheckWrapperRunning));
+            t.Start();
+        }
+
+        private void WriteTextSafe(bool visible)
+        {
+            if (idleImg.InvokeRequired)
+            {
+                var d = new SafeCallDelegate(WriteTextSafe);
+                Invoke(d, new object[] { visible });
+            }
+            else
+            {
+                idleImg.Visible = visible;
+            }
+        }
+
+        private void SetText(bool value)
+        {
+            WriteTextSafe(value);
+        }
+
+        private void CheckWrapperRunning()
+        {
+            while (true)
+            {
+                var isConnected = wrapper.IsConnected;
+                if (isConnected)
+                    WriteTextSafe(false);
+                else
+                    WriteTextSafe(true);
+
+                Thread.Sleep(1000);
+            }
             
+        }
+
+        private void CreateIdle()
+        {
+            Image image = iRacingDash.Properties.Resources.idle;
+            this.idleImg = new PictureBox
+            {
+                Name = "idleImg",
+                Size = new Size(370, 300),
+                Location = new Point(0, 0),
+                Image = image,
+            };
+            this.Controls.Add(idleImg);
+            idleImg.Visible = true;
+            idleImg.BringToFront();
         }
 
 
         //InPitsV2, BrakeBias, Gear, Fuel, TC
         private void NonRealtimeCalculations(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
-
             fpsCounter = 0;
 
             InPitsV2(e);
             CalculateGear(e);
             CalculateFuel(e);
 
-            
 
             remainingTime = e.TelemetryInfo.SessionTimeRemain.Value;
 
             #region Set Fuel level
+
             fuelLevel = e.TelemetryInfo.FuelLevel.Value;
             Fuel_remain_value.Text = string.Format("{0:00.00}", fuelLevel);
+
             #endregion
 
             #region EngineWarnings (Stalled engine)
-            engine_panel.Visible = engineWarning == 30 ? true : false;
-            #endregion
 
+            engine_panel.Visible = engineWarning == 30 ? true : false;
+
+            #endregion
 
 
             if (DriverCarIdx != -9999)
                 position = e.TelemetryInfo.CarIdxPosition.Value[DriverCarIdx];
-
         }
 
 
@@ -206,7 +282,8 @@ namespace iRacingDash
             //settingsPanel.BringToFront();
         }
 
-        private Label CreateLabel(string name, string text, Size size, Point location, Color color, Font font, bool visible)
+        private Label CreateLabel(string name, string text, Size size, Point location, Color color, Font font,
+            bool visible)
         {
             Label label = new Label();
             label.Text = text;
@@ -234,23 +311,20 @@ namespace iRacingDash
                 {
                     LightPanel(warning_panel, Color.Blue);
                 }
-                else
-                if (sessionFlag.Contains("Yellow") || sessionFlag.Contains("Caution") || sessionFlag.Contains("CautionWaving") || sessionFlag.Contains("YellowWaving"))
+                else if (sessionFlag.Contains("Yellow") || sessionFlag.Contains("Caution") ||
+                         sessionFlag.Contains("CautionWaving") || sessionFlag.Contains("YellowWaving"))
                 {
                     LightPanel(warning_panel, Color.Yellow);
                 }
-                else
-                if (sessionFlag.Contains("Green"))
+                else if (sessionFlag.Contains("Green"))
                 {
                     LightPanel(warning_panel, Color.Green);
                 }
-                else
-                if (sessionFlag.Contains("White"))
+                else if (sessionFlag.Contains("White"))
                 {
                     LightPanel(warning_panel, Color.White);
                 }
-                else
-                if (sessionFlag.Contains("Repair"))
+                else if (sessionFlag.Contains("Repair"))
                 {
                     LightPanel(warning_panel, Color.Red);
                 }
@@ -258,8 +332,7 @@ namespace iRacingDash
 
             if (fuelLevel < 5)
                 panel4.BackColor = Color.DarkRed;
-            else
-            if (fuelLevel < 10)
+            else if (fuelLevel < 10)
                 LightPanel(panel4, Color.DarkRed);
 
             if (engineWarning == 30)
@@ -269,9 +342,7 @@ namespace iRacingDash
                 else
                     engine_value.Visible = true;
             }
-
         }
-
 
 
         private void LightPanel(Panel panel, Color color)
@@ -305,10 +376,10 @@ namespace iRacingDash
                 }
 
 
-
                 if (sessionNumberTemp != sessionNumber || subSessionNumber != subSessionNumberTemp)
                 {
                     #region Variables reset
+
                     lapCount = 0;
                     lapCountTemp = -1;
                     lapCountPrevious = 0;
@@ -336,11 +407,11 @@ namespace iRacingDash
                     initForFuel = true;
 
                     sessionNumberTemp = sessionNumber;
+
                     #endregion
                 }
                 else
                 {
-
                     Speed_value.Text = Math.Round(e.TelemetryInfo.Speed.Value * 3.6).ToString();
 
                     //újraszámoljuk a szükséges adatokat
@@ -348,28 +419,35 @@ namespace iRacingDash
                     NewLapCalculation(e);
 
 
-                    if (fpsCounter == (int)(wrapper.TelemetryUpdateFrequency / NonRTCalculationFPS))
+                    if (fpsCounter == (int) (wrapper.TelemetryUpdateFrequency / NonRTCalculationFPS))
                         NonRealtimeCalculations(e);
 
-                    if (flashingFpsCounter == (int)(wrapper.TelemetryUpdateFrequency / flashingFps))
+                    if (flashingFpsCounter == (int) (wrapper.TelemetryUpdateFrequency / flashingFps))
                         WarningFlashes(e);
 
                     #region Set boost
+
                     boost = Int32.Parse(wrapper.GetData("dcBoostLevel").ToString());
                     boost_value.Text = boost.ToString();
+
                     #endregion
 
                     #region Set TC1 TC2
+
                     tractionControl1 = Int32.Parse(wrapper.GetData("dcTractionControl").ToString());
                     tractionControl2 = Int32.Parse(wrapper.GetData("dcTractionControl2").ToString());
+
                     #endregion
 
                     #region Set Brake bias
+
                     brakeBias = float.Parse(wrapper.GetData("dcBrakeBias").ToString());
                     Brake_bias_value.Text = string.Format("{0:00.00}", Convert.ToDouble(brakeBias));
+
                     #endregion
 
                     #region Init temp values for car settings
+
                     if (boostTemp == -1)
                         boostTemp = boost;
 
@@ -381,13 +459,16 @@ namespace iRacingDash
 
                     if (brakeBiasTemp == -1)
                         brakeBiasTemp = brakeBias;
+
                     #endregion
 
                     #region Any setting on car flashes here
+
                     CarSettingPanelFlash(e, ref boost, ref boostTemp, "BOOST");
                     CarSettingPanelFlash(e, ref tractionControl1, ref tractionControl1Temp, "TC1");
                     CarSettingPanelFlash(e, ref tractionControl2, ref tractionControl2Temp, "TC2");
                     CarSettingPanelFlash(e, ref brakeBias, ref brakeBiasTemp, "FRT BRB");
+
                     #endregion
 
                     //az UpdateLapTime mögé kellett rakjam, hogy legyen egy temp kör szám, így az updatelaptimeban majd a legfrissebbel hasonlitja ezt ami előtte bennevolt
@@ -400,16 +481,17 @@ namespace iRacingDash
             }
             catch (Exception ex)
             {
-
                 if (errorLogger == null)
                     errorLogger = new Logger(logPath + "\\" + dateInString + "\\errorLog.txt");
-                errorLogger.Log("OnSessionTelemetryUpdated Error", ex.Message);
+                errorLogger.Log("OnSessionTelemetryUpdated Error", ex.Message + Environment.NewLine + ex.StackTrace);
             }
         }
 
-        private void CarSettingPanelFlash<T>(SdkWrapper.TelemetryUpdatedEventArgs e, ref T actualValue, ref T valueTemp, string title)
+        private void CarSettingPanelFlash<T>(SdkWrapper.TelemetryUpdatedEventArgs e, ref T actualValue, ref T valueTemp,
+            string title)
         {
             #region Set Traction Control TC1, TC2, Boost
+
             try
             {
                 if (!actualValue.Equals(valueTemp))
@@ -418,7 +500,7 @@ namespace iRacingDash
                         settingPanelFpsCounter = 0;
 
                     //panelek megjelenitése
-                    if (settingPanelFpsCounter <= (int)(wrapper.TelemetryUpdateFrequency / settingPanelFps))
+                    if (settingPanelFpsCounter <= (int) (wrapper.TelemetryUpdateFrequency / settingPanelFps))
                     {
                         settingLabelTitle.Text = title;
                         if (actualValue.GetType() == typeof(float))
@@ -429,7 +511,7 @@ namespace iRacingDash
                         {
                             settingLabelValue.Text = actualValue.ToString();
                         }
-                        
+
 
                         //settingsPanel.Visible = true;
                         settingLabelTitle.Visible = true;
@@ -450,6 +532,7 @@ namespace iRacingDash
                 settingLabelTitle.Text = title;
                 settingLabelValue.Text = "N/A";
             }
+
             #endregion
         }
 
@@ -489,7 +572,6 @@ namespace iRacingDash
 
         private void NewLapCalculation(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
-
             NewLapSettings(e);
             UpdateLapTimeV2(e);
             CalculateDeltaV2(e);
@@ -502,6 +584,7 @@ namespace iRacingDash
             lapCount = e.TelemetryInfo.Lap.Value;
 
             #region Init lapCountTemp
+
             if (lapCountTemp == -1)
             {
                 lapCountTemp = lapCount;
@@ -510,8 +593,10 @@ namespace iRacingDash
                 //creating the logger here
                 //fuelComputeLogger = new Logger(logPath + dateInString + "\\fuelCompute.txt"); TODO
                 newLapLogger = new Logger(logPath + "\\" + dateInString + "\\newLap.txt");
-                this.newLapLogger.Log("Init", "lapCountTemp: " + lapCountTemp + Environment.NewLine + "  currentLap: " + currentLap);
+                this.newLapLogger.Log("Init",
+                    "lapCountTemp: " + lapCountTemp + Environment.NewLine + "  currentLap: " + currentLap);
             }
+
             #endregion
 
             if (lapCount - lapCountTemp == 1)
@@ -528,7 +613,9 @@ namespace iRacingDash
                 lapCountPrevious = currentLap;
                 currentLap = lapCount;
 
-                newLapLogger.Log("In a new lap", "lapTime: " + lapTime + Environment.NewLine + "  lapCountPrevious: " + lapCountPrevious + Environment.NewLine + "  currentLap: " + currentLap);
+                newLapLogger.Log("In a new lap",
+                    "lapTime: " + lapTime + Environment.NewLine + "  lapCountPrevious: " + lapCountPrevious +
+                    Environment.NewLine + "  currentLap: " + currentLap);
             }
         }
 
@@ -572,19 +659,25 @@ namespace iRacingDash
                 }
 
                 #region fuelLapStart init
+
                 if (fuelLapStart == -1)
                 {
                     fuelLapStart = actualFuelLevel;
 
                     fuelUsageLogger = new Logger(logPath + "\\" + dateInString + "\\fuelUsage.txt");
-                    fuelUsageLogger.Log("Init", "Lap number:  " + lapCount + Environment.NewLine + "  fuelLapStart: " + fuelLapStart);
+                    fuelUsageLogger.Log("Init",
+                        "Lap number:  " + lapCount + Environment.NewLine + "  fuelLapStart: " + fuelLapStart);
                     return;
                 }
+
                 #endregion
 
                 var lapStartEndFuelDifference = fuelLapStart - actualFuelLevel;
-                fuelUsageLogger.Log("Difference", "Lap number: " + lapCount + Environment.NewLine + "  lapStartEndFuelDifference: " + lapStartEndFuelDifference + Environment.NewLine
-                    + "  fuelLapStart: " + fuelLapStart + Environment.NewLine + "  actualFuelLevel: " + actualFuelLevel);
+                fuelUsageLogger.Log("Difference", "Lap number: " + lapCount + Environment.NewLine +
+                                                  "  lapStartEndFuelDifference: " + lapStartEndFuelDifference +
+                                                  Environment.NewLine
+                                                  + "  fuelLapStart: " + fuelLapStart + Environment.NewLine +
+                                                  "  actualFuelLevel: " + actualFuelLevel);
 
                 Last_lap_value.Text = string.Format("{0:0.00}", lapStartEndFuelDifference);
 
@@ -597,10 +690,10 @@ namespace iRacingDash
             var lapObject = wrapper.GetData("LapCurrentLapTime");
             var lap = Convert.ToDouble(lapObject);
 
-            int min = (int)(lap / 60);
-            int sec = (int)(lap % 60);
+            int min = (int) (lap / 60);
+            int sec = (int) (lap % 60);
 
-            double decimalPart = lap % (int)lap;
+            double decimalPart = lap % (int) lap;
 
             string laptime;
             laptime = decimalPart > 0
@@ -738,7 +831,6 @@ namespace iRacingDash
             }
 
 
-
             if (rpmPercent > minRpmPercent + shiftLight1Percent &&
                 rpmPercent <= minRpmPercent + shiftLight1Percent + shiftLight2Percent)
             {
@@ -767,7 +859,6 @@ namespace iRacingDash
                 var percent1 = (rpmYellowBottom + oneThird) / (maxRpm / 100);
                 var percent2 = (rpmYellowBottom + oneThird * 2) / (maxRpm / 100);
                 var percent3 = (rpmYellowBottom + oneThird * 3) / (maxRpm / 100);
-
 
 
                 if (rpmPercent > minRpmPercent + shiftLight1Percent && rpmPercent < percent1)
@@ -859,7 +950,6 @@ namespace iRacingDash
                 //gear changes to red
                 gear.ForeColor = Color.Red;
                 gear_panel.BackColor = Color.Orange;
-
             }
 
             if (rpmPercent > redLinePercent)
@@ -869,7 +959,6 @@ namespace iRacingDash
 
                 gear_panel.BackColor = Color.Red;
                 gear.ForeColor = Color.White;
-
             }
         }
 
@@ -880,13 +969,16 @@ namespace iRacingDash
                 subSessionNumber = Int32.Parse(e.SessionInfo["WeekendInfo"]["SubSessionID"].Value);
 
                 #region Init subSessionNumberTemp
+
                 if (subSessionNumberTemp == -1)
                     subSessionNumberTemp = subSessionNumber;
+
                 #endregion
 
                 if (sessionNumber != sessionNumberTemp || subSessionNumber != subSessionNumberTemp)
                 {
                     #region Resetting variables
+
                     maxFuelOfCar = -9999;
                     trackLength = 0;
                     subSessionNumberTemp = subSessionNumber;
@@ -917,6 +1009,7 @@ namespace iRacingDash
                     initForFuel = true;
 
                     //newLapLogger.Log("Resetting variables", Environment.NewLine + "OnSessionUpdated");
+
                     #endregion
                 }
                 else
@@ -924,7 +1017,8 @@ namespace iRacingDash
                     maxFuelOfCar = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarFuelMaxLtr"].Value);
                     trackLength = float.Parse(e.SessionInfo["WeekendInfo"]["TrackLength"].Value.Substring(0, 4)) * 1000;
 
-                    var isMaxRpmValid = float.TryParse(e.SessionInfo["DriverInfo"]["DriverCarRedLine"].Value, out maxRpm);
+                    var isMaxRpmValid = float.TryParse(e.SessionInfo["DriverInfo"]["DriverCarRedLine"].Value,
+                        out maxRpm);
 
                     if (isMaxRpmValid)
                         maxRpm = float.Parse(e.SessionInfo["DriverInfo"]["Drivers"].Value);
@@ -941,19 +1035,24 @@ namespace iRacingDash
         private void CalculateFuel(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
             #region Gathering required variables to calculate fuel
+
             //required vars
             //remaining time, avg fuel usage, avg laptime
             var avgFuelUsage = GetAverageFromList(fuelUsagePerLap);
             var avgLapTime = GetAverageFromList(laptimes);
+
             #endregion
 
             #region Calculate estimate laps
+
             var remainingLapsWithFuel = fuelLevel / avgFuelUsage;
             if (HasValue(remainingLapsWithFuel))
                 Laps_estimate_value.Text = string.Format("{0:0.00}", remainingLapsWithFuel);
+
             #endregion
 
             #region Calculate fuel to fill
+
             var timeWithoutFuel = remainingTime - (avgLapTime * remainingLapsWithFuel);
 
             if (timeWithoutFuel > 0)
@@ -966,7 +1065,8 @@ namespace iRacingDash
 
                 if (HasValue(minimumLapsToFill) && HasValue(fillForLeftover))
                 {
-                    var toFill = (minimumLapsToFill * avgFuelUsage) + fillForLeftover + Math.Ceiling(avgFuelUsage) + 1; //+1 liter for safety
+                    var toFill = (minimumLapsToFill * avgFuelUsage) + fillForLeftover + Math.Ceiling(avgFuelUsage) +
+                                 1; //+1 liter for safety
 
                     Fuel_to_fill_value.Text = toFill > maxFuelOfCar
                         ? string.Format("{0:0.00}", maxFuelOfCar)
@@ -977,9 +1077,11 @@ namespace iRacingDash
             {
                 Fuel_to_fill_value.Text = "CHCK";
             }
+
             #endregion
 
             #region Calculate if fuel is enough/not to finish line respectively
+
             var avgFuelUsageInASecond = avgFuelUsage / avgLapTime;
             var litersPlusOrMinus = avgFuelUsageInASecond * timeWithoutFuel;
             var toFinishLine = (remainingTime + avgLapTime) * avgFuelUsageInASecond;
@@ -1001,6 +1103,7 @@ namespace iRacingDash
                 fuel_to_finish_value.ForeColor = Color.White;
                 panel10.BackColor = Color.Firebrick;
             }
+
             #endregion
         }
 
@@ -1021,6 +1124,7 @@ namespace iRacingDash
         }
 
         #region FORM BETÖLTÉS
+
         private void Form1_Load(object sender, EventArgs e)
         {
             this.Location = new Point(0, 0);
@@ -1032,6 +1136,7 @@ namespace iRacingDash
         }
 
         private bool clicked = false;
+
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
             if (!clicked)
