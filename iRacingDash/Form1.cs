@@ -172,7 +172,7 @@ namespace iRacingDash
 
 
             CreateIdle();
-            
+
 
             //panelek előtérbe helyezése
             settingLabelTitle.BringToFront();
@@ -216,7 +216,7 @@ namespace iRacingDash
 
         private void CheckWrapperRunning()
         {
-            idleClock.Text = string.Format("{0:00}:{1:00}",DateTime.Now.Hour, DateTime.Now.Minute);
+            idleClock.Text = string.Format("{0:00}:{1:00}", DateTime.Now.Hour, DateTime.Now.Minute);
             while (true)
             {
                 var isConnected = wrapper.IsConnected;
@@ -248,12 +248,12 @@ namespace iRacingDash
             };
             this.Controls.Add(idleImg);
             idleImg.MouseDown += new MouseEventHandler(Idle_MouseDown);
-            idleImg.MouseUp+= new MouseEventHandler(Idle_MouseUp);
-            idleImg.MouseMove+= new MouseEventHandler(Idle_MouseMove);
+            idleImg.MouseUp += new MouseEventHandler(Idle_MouseUp);
+            idleImg.MouseMove += new MouseEventHandler(Idle_MouseMove);
             idleImg.DoubleClick += new EventHandler(Idle_DoubleClick);
 
             idleImg.Visible = true;
-            
+
 
             idleClock = CreateLabel("idleClock", "00:00", new Size(130, 50), new Point(120, 30), Color.White, Color.Transparent,
                 new Font("Microsoft YaHei", 30, FontStyle.Regular), true);
@@ -331,31 +331,31 @@ namespace iRacingDash
         private void WarningFlashes(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
             flashingFpsCounter = 0;
-            var sessionFlag = e.TelemetryInfo.SessionFlags.Value.ToString().Split();
+            var sessionFlag = e.TelemetryInfo.SessionFlags.Value.ToString();
 
-            if (fuelLevel < 10)
 
-                if (sessionFlag.Contains("Blue"))
-                {
-                    LightPanel(warning_panel, Color.Blue);
-                }
-                else if (sessionFlag.Contains("Yellow") || sessionFlag.Contains("Caution") ||
-                         sessionFlag.Contains("CautionWaving") || sessionFlag.Contains("YellowWaving"))
-                {
-                    LightPanel(warning_panel, Color.Yellow);
-                }
-                else if (sessionFlag.Contains("Green"))
-                {
-                    LightPanel(warning_panel, Color.Green);
-                }
-                else if (sessionFlag.Contains("White"))
-                {
-                    LightPanel(warning_panel, Color.White);
-                }
-                else if (sessionFlag.Contains("Repair"))
-                {
-                    LightPanel(warning_panel, Color.Red);
-                }
+            if (sessionFlag.Contains("Repair"))
+            {
+                LightPanel(warning_panel, Color.Black);
+            } else
+            if (sessionFlag.Contains("Blue"))
+            {
+                LightPanel(warning_panel, Color.Blue);
+            }
+            else if (sessionFlag.Contains("Yellow") || sessionFlag.Contains("Caution") ||
+                     sessionFlag.Contains("CautionWaving") || sessionFlag.Contains("YellowWaving"))
+            {
+                LightPanel(warning_panel, Color.Yellow);
+            }
+            else if (sessionFlag.Contains("Green"))
+            {
+                LightPanel(warning_panel, Color.Green);
+            }
+            else if (sessionFlag.Contains("White"))
+            {
+                LightPanel(warning_panel, Color.White);
+            }
+            
 
 
             if (fuelLevel < 5)
