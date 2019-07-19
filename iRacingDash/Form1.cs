@@ -25,7 +25,7 @@ namespace iRacingDash
         private iRacingSDK sdk;
 
 
-        private delegate void SafeCallDelegate(bool visible);
+        private delegate void SafeCallDelegate(bool visible, string time);
         private static Configurator s = new Configurator();
         public static string logPath = s.Configurate<string>("logPath", "config", "Path");
         public static string dateInString = now.ToString().Replace(' ', '-').Replace('/', '-').Replace(':', '-');
@@ -69,6 +69,7 @@ namespace iRacingDash
         private float maxFuelOfCar = 0;
 
         private float fuelLevel;
+        private int manualLapCount = -1;
 
         //**ESTIMATED LAPS
         private double remainingTime;
@@ -184,34 +185,36 @@ namespace iRacingDash
             t.Start();
         }
 
-        private void WriteTextSafe(bool visible)
+        private void WriteTextSafe(bool visible, string time)
         {
             if (idleImg.InvokeRequired)
             {
                 var d = new SafeCallDelegate(WriteTextSafe);
-                Invoke(d, new object[] { visible });
+                Invoke(d, new object[] { visible, time });
             }
             else
             {
                 idleImg.Visible = visible;
+                idleClock.Text = time;
             }
 
             if (idleClock.InvokeRequired)
             {
                 var d = new SafeCallDelegate(WriteTextSafe);
-                Invoke(d, new object[] { visible });
+                Invoke(d, new object[] { visible, time });
             }
             else
             {
                 idleClock.Visible = visible;
+                idleClock.Text = time;
             }
 
         }
 
 
-        private void SetText(bool value)
+        private void SetText(bool value, string time)
         {
-            WriteTextSafe(value);
+            WriteTextSafe(value, time);
         }
 
         private void CheckWrapperRunning()
@@ -223,15 +226,15 @@ namespace iRacingDash
 
                 if (isConnected)
                 {
-                    WriteTextSafe(false);
+                    WriteTextSafe(false, string.Format("{0:00}:{1:00}", DateTime.Now.Hour, DateTime.Now.Minute));
                 }
                 else
                 {
-                    WriteTextSafe(true);
+                    WriteTextSafe(true, string.Format("{0:00}:{1:00}", DateTime.Now.Hour, DateTime.Now.Minute));
                 }
 
 
-                Thread.Sleep(1000);
+                Thread.Sleep(3000);
             }
 
         }
@@ -333,11 +336,13 @@ namespace iRacingDash
             flashingFpsCounter = 0;
             var sessionFlag = e.TelemetryInfo.SessionFlags.Value.ToString();
 
+            warning_panel.BackColor = Color.Transparent;
 
             if (sessionFlag.Contains("Repair"))
             {
                 LightPanel(warning_panel, Color.Black);
-            } else
+            }
+            else
             if (sessionFlag.Contains("Blue"))
             {
                 LightPanel(warning_panel, Color.Blue);
@@ -355,7 +360,7 @@ namespace iRacingDash
             {
                 LightPanel(warning_panel, Color.White);
             }
-            
+
 
 
             if (fuelLevel < 5)
@@ -432,9 +437,14 @@ namespace iRacingDash
                     rpm.Text = "N/A";
                     gear.Text = "N";
                     Last_lap_value.Text = "N/A";
+                    fuel_to_finish_value.Text = "N/A";
                     initForFuel = true;
 
                     sessionNumberTemp = sessionNumber;
+
+                    if (newLapLogger == null)
+                        newLapLogger = new Logger(logPath + "\\" + dateInString + "\\errorLog.txt");
+                    newLapLogger.Log("New session", "");
 
                     #endregion
                 }
@@ -640,6 +650,7 @@ namespace iRacingDash
                 //laptimes.Add(lapTime);
                 lapCountPrevious = currentLap;
                 currentLap = lapCount;
+                //manualLapCount++;
 
                 newLapLogger.Log("In a new lap",
                     "lapTime: " + lapTime + Environment.NewLine + "  lapCountPrevious: " + lapCountPrevious +
@@ -660,6 +671,11 @@ namespace iRacingDash
             else if (deltaInt <= 0 && deltaInt > -99.99)
             {
                 delta_panel.BackColor = Color.Green;
+                Delta_value.Text = string.Format("{0:0.00}", deltaInt);
+            }
+            else if (deltaInt == 0)
+            {
+                delta_panel.BackColor = Color.FromArgb(255, 40, 40, 40);
                 Delta_value.Text = string.Format("{0:0.00}", deltaInt);
             }
             else if (deltaInt >= 99.99)
@@ -698,6 +714,8 @@ namespace iRacingDash
                     return;
                 }
 
+
+
                 #endregion
 
                 var lapStartEndFuelDifference = fuelLapStart - actualFuelLevel;
@@ -711,6 +729,8 @@ namespace iRacingDash
 
                 fuelLapStart = actualFuelLevel;
             }
+            
+
         }
 
         private void UpdateLapTimeV2(SdkWrapper.TelemetryUpdatedEventArgs e)
@@ -1049,7 +1069,7 @@ namespace iRacingDash
                         out maxRpm);
 
                     if (isMaxRpmValid)
-                        maxRpm = float.Parse(e.SessionInfo["DriverInfo"]["Drivers"].Value);
+                        maxRpm = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarRedLine"].Value);
                 }
             }
             catch (Exception ex)

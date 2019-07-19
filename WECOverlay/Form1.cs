@@ -22,6 +22,7 @@ namespace WECOverlay
         private static Configurator s = new Configurator();
 
         public static string logPath = s.Configurate<string>("log", "config", "Path");
+        public static string trackPath = s.Configurate<string>("tracks", "config", "Path");
         public static string dateInString = now.ToString().Replace(' ', '-').Replace('/', '-').Replace(':', '-');
         private Logger errorLogger;
 
@@ -43,6 +44,7 @@ namespace WECOverlay
         private bool RecceMode = s.Configurate<bool>("RecceMode", "config", "RecceMode");
 
         private string classImagesPath = s.Configurate<string>("classImages", "config", "Path");
+        private bool classImageSet = false;
 
         //Session
         private bool sessionChanged = false;
@@ -188,6 +190,7 @@ namespace WECOverlay
                     {
                         //for resetting variables
                         sessionNumberTemp = sessionNumber;
+                        classImageSet = false;
                     }
                     catch (Exception ex)
                     {
@@ -212,7 +215,7 @@ namespace WECOverlay
                 //kell az új session resetje
                 if (!trackSet && trackId != trackIdTemp && trackId > 0)
                 {
-                    Turns = new CSVParser().Parse(@"C:\tracksList.csv", trackId);
+                    Turns = new CSVParser().Parse(trackPath, trackId);  
                     trackSet = true;
                     trackIdTemp = trackId;
                 }
@@ -223,6 +226,9 @@ namespace WECOverlay
 
                 //adott classon belüli kép megjelenitése
                 if (sessionChanged)
+                    SetClassColor(e);
+
+                if (wrapper.IsConnected && !classImageSet)
                     SetClassColor(e);
 
                 //2 mód van benne. A ledek vagy képekből vagy panelekből épülnek fel
@@ -254,18 +260,22 @@ namespace WECOverlay
                 {
                     case "0xffda59":
                         class_picture.Image = Image.FromFile(classImagesPath + "\\class_ffda59.png");
+                        classImageSet = true;
                         break;
                     case "0x33ceff":
                         class_picture.Image = Image.FromFile(classImagesPath + "\\class_33ceff.png");
+                        classImageSet = true;
                         break;
                     case "0xff5888":
                         class_picture.Image = Image.FromFile(classImagesPath + "\\class_ff5888.png");
+                        classImageSet = true;
                         break;
                     default:
                         class_picture.Image = Image.FromFile(classImagesPath + "\\class_default.png");
                         break;
                 }
             }
+
         }
 
         private void Pedals(SdkWrapper.TelemetryUpdatedEventArgs e)
