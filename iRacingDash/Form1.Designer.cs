@@ -90,6 +90,8 @@
             this.fuel_to_finish_value = new System.Windows.Forms.Label();
             this.engine_panel = new System.Windows.Forms.Panel();
             this.engine_value = new System.Windows.Forms.Label();
+            this.carLeftPanel = new System.Windows.Forms.Panel();
+            this.carRightPanel = new System.Windows.Forms.Panel();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel3.SuspendLayout();
@@ -488,7 +490,7 @@
             this.Delta_value.ForeColor = System.Drawing.Color.White;
             this.Delta_value.Location = new System.Drawing.Point(0, 0);
             this.Delta_value.Name = "Delta_value";
-            this.Delta_value.Size = new System.Drawing.Size(98, 49);
+            this.Delta_value.Size = new System.Drawing.Size(98, 48);
             this.Delta_value.TabIndex = 9;
             this.Delta_value.Text = "N/A";
             this.Delta_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -713,19 +715,20 @@
             // 
             this.warning_panel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
             this.warning_panel.Controls.Add(this.panel10);
-            this.warning_panel.Location = new System.Drawing.Point(1, 66);
+            this.warning_panel.Location = new System.Drawing.Point(-1, 66);
             this.warning_panel.Name = "warning_panel";
-            this.warning_panel.Size = new System.Drawing.Size(373, 115);
+            this.warning_panel.Size = new System.Drawing.Size(375, 115);
             this.warning_panel.TabIndex = 40;
             // 
             // panel10
             // 
+            this.panel10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
             this.panel10.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panel10.Controls.Add(this.fuel_to_finish_text);
             this.panel10.Controls.Add(this.fuel_to_finish_value);
-            this.panel10.Location = new System.Drawing.Point(110, 62);
+            this.panel10.Location = new System.Drawing.Point(113, 62);
             this.panel10.Name = "panel10";
-            this.panel10.Size = new System.Drawing.Size(123, 50);
+            this.panel10.Size = new System.Drawing.Size(120, 50);
             this.panel10.TabIndex = 29;
             // 
             // fuel_to_finish_text
@@ -735,7 +738,7 @@
             this.fuel_to_finish_text.ForeColor = System.Drawing.Color.Gold;
             this.fuel_to_finish_text.Location = new System.Drawing.Point(0, 28);
             this.fuel_to_finish_text.Name = "fuel_to_finish_text";
-            this.fuel_to_finish_text.Size = new System.Drawing.Size(121, 20);
+            this.fuel_to_finish_text.Size = new System.Drawing.Size(118, 20);
             this.fuel_to_finish_text.TabIndex = 28;
             this.fuel_to_finish_text.Text = "Fuel to finish";
             this.fuel_to_finish_text.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -748,7 +751,7 @@
             this.fuel_to_finish_value.ForeColor = System.Drawing.Color.White;
             this.fuel_to_finish_value.Location = new System.Drawing.Point(0, 0);
             this.fuel_to_finish_value.Name = "fuel_to_finish_value";
-            this.fuel_to_finish_value.Size = new System.Drawing.Size(121, 36);
+            this.fuel_to_finish_value.Size = new System.Drawing.Size(118, 36);
             this.fuel_to_finish_value.TabIndex = 27;
             this.fuel_to_finish_value.Text = "N/A";
             this.fuel_to_finish_value.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -757,7 +760,7 @@
             // 
             this.engine_panel.BackColor = System.Drawing.Color.Red;
             this.engine_panel.Controls.Add(this.engine_value);
-            this.engine_panel.Location = new System.Drawing.Point(-2, 63);
+            this.engine_panel.Location = new System.Drawing.Point(-1, 65);
             this.engine_panel.Name = "engine_panel";
             this.engine_panel.Size = new System.Drawing.Size(381, 227);
             this.engine_panel.TabIndex = 41;
@@ -767,11 +770,27 @@
             this.engine_value.AutoSize = true;
             this.engine_value.Font = new System.Drawing.Font("Microsoft YaHei", 25F, System.Drawing.FontStyle.Bold);
             this.engine_value.ForeColor = System.Drawing.Color.White;
-            this.engine_value.Location = new System.Drawing.Point(71, 98);
+            this.engine_value.Location = new System.Drawing.Point(72, 91);
             this.engine_value.Name = "engine_value";
             this.engine_value.Size = new System.Drawing.Size(229, 45);
             this.engine_value.TabIndex = 0;
             this.engine_value.Text = "ENGINE OFF";
+            // 
+            // carLeftPanel
+            // 
+            this.carLeftPanel.BackColor = System.Drawing.Color.DeepPink;
+            this.carLeftPanel.Location = new System.Drawing.Point(-5, -8);
+            this.carLeftPanel.Name = "carLeftPanel";
+            this.carLeftPanel.Size = new System.Drawing.Size(10, 317);
+            this.carLeftPanel.TabIndex = 43;
+            // 
+            // carRightPanel
+            // 
+            this.carRightPanel.BackColor = System.Drawing.Color.DeepPink;
+            this.carRightPanel.Location = new System.Drawing.Point(365, -4);
+            this.carRightPanel.Name = "carRightPanel";
+            this.carRightPanel.Size = new System.Drawing.Size(10, 317);
+            this.carRightPanel.TabIndex = 44;
             // 
             // Form1
             // 
@@ -815,6 +834,8 @@
             this.Controls.Add(this.pictureBox11);
             this.Controls.Add(this.pictureBox12);
             this.Controls.Add(this.panel6);
+            this.Controls.Add(this.carLeftPanel);
+            this.Controls.Add(this.carRightPanel);
             this.Controls.Add(this.warning_panel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -934,6 +955,8 @@
         private System.Windows.Forms.Label fuel_to_finish_value;
         private System.Windows.Forms.Panel engine_panel;
         private System.Windows.Forms.Label engine_value;
+        private System.Windows.Forms.Panel carLeftPanel;
+        private System.Windows.Forms.Panel carRightPanel;
     }
 }
 

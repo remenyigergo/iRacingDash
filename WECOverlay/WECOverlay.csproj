@@ -81,10 +81,15 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <EmbeddedResource Include="Turn.resx">
       <DependentUpon>Turn.cs</DependentUpon>
     </EmbeddedResource>
+    <None Include="Formula1-Black.ttf" />
+    <None Include="Formula1-Bold.ttf" />
+    <None Include="Formula1-Regular.ttf" />
+    <None Include="Formula1-Wide.ttf" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -106,6 +111,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="icon.ico" />
+    <None Include="images\class_ffda59.png" />
+    <None Include="images\class_ff5888.png" />
+    <None Include="images\class_default.png" />
+    <None Include="images\class_33ceff.png" />
+    <None Include="images\class.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
