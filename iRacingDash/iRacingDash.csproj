@@ -102,6 +102,10 @@
       <Project>{D6DB568B-35B3-49EB-8CB3-E4E5F1424247}</Project>
       <Name>iRacingSdkWrapper</Name>
     </ProjectReference>
+    <ProjectReference Include="..\MockSdkWrapper\MockSdkWrapper.csproj">
+      <Project>{9c7fb2fa-4448-4f59-9970-8481696a4235}</Project>
+      <Name>MockSdkWrapper</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="dash-icon.ico" />

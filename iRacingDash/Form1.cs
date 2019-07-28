@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using iRacingSdkWrapper;
 using iRSDKSharp;
 using iRacingSdkWrapper.Bitfields;
+using Newtonsoft.Json;
 
 //EngineWarnings : pits = 16, rpmMaximum = 32, normal = 0, stalled = 30
 namespace iRacingDash
@@ -23,7 +24,7 @@ namespace iRacingDash
     public partial class Form1 : Form
     {
         private static DateTime now = DateTime.Now;
-        private SdkWrapper wrapper;
+        private ISdkWrapper wrapper;
         private iRacingSDK sdk;
 
 
@@ -134,7 +135,8 @@ namespace iRacingDash
             InitializeComponent();
 
             sdk = new iRacingSDK();
-            wrapper = new SdkWrapper();
+            //wrapper = new SdkWrapper();
+            wrapper = new MockSdkWrapper.MockSdkWrapper();
 
             Last_lap_title.ForeColor = Color.Gold;
             //CONFIGS
@@ -153,10 +155,13 @@ namespace iRacingDash
             shiftLight2Percent = s.Configurate<int>("led", "config", "ShiftLightYellowPercent");
             redLinePercent = s.Configurate<int>("led", "config", "ShiftLightRedPercent");
 
-            wrapper.Start();
+            
             wrapper.TelemetryUpdateFrequency = s.Configurate<int>("fps", "config", "TelemetryFps");
             wrapper.TelemetryUpdated += OnTelemetryUpdated;
             wrapper.SessionInfoUpdated += OnSessionInfoUpdated;
+            wrapper.Start();
+
+
 
             led1_1.Visible = false;
             led1_2.Visible = false;
@@ -194,8 +199,9 @@ namespace iRacingDash
             //settingsPanel.BringToFront();
 
 
-            Thread t = new Thread(new ThreadStart(CheckWrapperRunning));
-            t.Start();
+            idleImg.Visible = false;
+            //Thread t = new Thread(new ThreadStart(CheckWrapperRunning));
+            //t.Start();
         }
 
         private void WriteTextSafe(bool visible, string time)
@@ -285,9 +291,9 @@ namespace iRacingDash
         {
             fpsCounter = 0;
 
-            InPitsV2(e);
+            //InPitsV2(e);
             CalculateGear(e);
-            CalculateFuel(e);
+            //CalculateFuel(e);
 
 
             remainingTime = e.TelemetryInfo.SessionTimeRemain.Value;
@@ -307,8 +313,10 @@ namespace iRacingDash
             #endregion
 
 
-            if (DriverCarIdx != -9999)
-                position = e.TelemetryInfo.CarIdxPosition.Value[DriverCarIdx];
+            //if (DriverCarIdx != -9999)
+            //    position = e.TelemetryInfo.CarIdxPosition.Value[DriverCarIdx];
+
+            //File.AppendAllText("C:\\data.txt", string.Join("\n", log));
         }
 
 
@@ -437,8 +445,11 @@ namespace iRacingDash
             }
         }
 
+        List<string> log = new List<string>();
+
         private void OnTelemetryUpdated(object sender, SdkWrapper.TelemetryUpdatedEventArgs e)
         {
+            var s = Stopwatch.StartNew();
             try
             {
                 fpsCounter++;
@@ -467,7 +478,7 @@ namespace iRacingDash
                 //    fuel_to_finish_value.Text = "N/A";
                 //}
 
-                if (sessionNumberTemp != sessionNumber || subSessionNumber != subSessionNumberTemp)
+                if (sessionNumberTemp != sessionNumber /*|| subSessionNumber != subSessionNumberTemp*/)
                 {
                     #region Variables reset
 
@@ -511,85 +522,92 @@ namespace iRacingDash
                 {
                     Speed_value.Text = Math.Round(e.TelemetryInfo.Speed.Value * 3.6).ToString();
 
+
                     //újraszámoljuk a szükséges adatokat
                     UpdateRpmLights(e);
-                    NewLapCalculation(e);
-                    CarLeftRight(e);
+                    //NewLapCalculation(e);
+                    //CarLeftRight(e);
 
                     if (fpsCounter == (int)(wrapper.TelemetryUpdateFrequency / NonRTCalculationFPS))
                         NonRealtimeCalculations(e);
+                    
+                    //if (flashingFpsCounter == (int)(wrapper.TelemetryUpdateFrequency / flashingFps))
+                    //    WarningFlashes(e);
 
-                    if (flashingFpsCounter == (int)(wrapper.TelemetryUpdateFrequency / flashingFps))
-                        WarningFlashes(e);
+                    //#region Set boost (if exist)
 
-                    #region Set boost (if exist)
+                    //if (wrapper.GetData("dcBoostLevel") != null)
+                    //{
+                    //    boost = Int32.Parse(wrapper.GetData("dcBoostLevel").ToString());
+                    //    boost_value.Text = boost.ToString();
+                    //}
+                    ////var dcFuelMixture = wrapper.GetData("dcFuelMixture");
+                    //#endregion
 
-                    if (wrapper.GetData("dcBoostLevel") != null)
-                    {
-                        boost = Int32.Parse(wrapper.GetData("dcBoostLevel").ToString());
-                        boost_value.Text = boost.ToString();
-                    }
-                    //var dcFuelMixture = wrapper.GetData("dcFuelMixture");
-                    #endregion
+                    //#region Set TC1 TC2
 
-                    #region Set TC1 TC2
+                    //if (wrapper.GetData("dcTractionControl") != null)
+                    //    tractionControl1 = Int32.Parse(wrapper.GetData("dcTractionControl").ToString());
 
-                    if (wrapper.GetData("dcTractionControl") != null)
-                        tractionControl1 = Int32.Parse(wrapper.GetData("dcTractionControl").ToString());
+                    //if (wrapper.GetData("dcTractionControl2") != null)
+                    //    tractionControl2 = Int32.Parse(wrapper.GetData("dcTractionControl2").ToString());
+                    //#endregion
 
-                    if (wrapper.GetData("dcTractionControl2") != null)
-                        tractionControl2 = Int32.Parse(wrapper.GetData("dcTractionControl2").ToString());
-                    #endregion
+                    //#region Set Brake bias
+                    //if (wrapper.GetData("dcBrakeBias") != null)
+                    //    Brake_bias_value.Text = string.Format("{0:00.00}", Convert.ToDouble(wrapper.GetData("dcBrakeBias").ToString()));
 
-                    #region Set Brake bias
-                    if (wrapper.GetData("dcBrakeBias") != null)
-                        Brake_bias_value.Text = string.Format("{0:00.00}", Convert.ToDouble(wrapper.GetData("dcBrakeBias").ToString()));
+                    //#endregion
 
-                    #endregion
+                    //#region Set Engine Map
+                    //if (wrapper.GetData("dcThrottleShape") != null)
+                    //{
+                    //    engineMap = Int32.Parse(wrapper.GetData("dcThrottleShape").ToString());
+                    //    boost_value.Text = engineMap.ToString();
+                    //}
+                    //#endregion
 
-                    #region Set Engine Map
-                    if (wrapper.GetData("dcThrottleShape") != null)
-                    {
-                        engineMap = Int32.Parse(wrapper.GetData("dcThrottleShape").ToString());
-                        boost_value.Text = engineMap.ToString();
-                    }
-                    #endregion
+                    //#region Init temp values for car settings
 
-                    #region Init temp values for car settings
+                    //if (boostTemp == -1 && boost != 0)
+                    //    boostTemp = boost;
 
-                    if (boostTemp == -1 && boost != 0)
-                        boostTemp = boost;
+                    //if (tractionControl1Temp == -1 && tractionControl1 != 0)
+                    //    tractionControl1Temp = tractionControl1;
 
-                    if (tractionControl1Temp == -1 && tractionControl1 != 0)
-                        tractionControl1Temp = tractionControl1;
+                    //if (tractionControl2Temp == -1 && tractionControl2 != 0)
+                    //    tractionControl2Temp = tractionControl2;
 
-                    if (tractionControl2Temp == -1 && tractionControl2 != 0)
-                        tractionControl2Temp = tractionControl2;
+                    //if (brakeBiasTemp == -1 && brakeBias != 0)
+                    //    brakeBiasTemp = brakeBias;
 
-                    if (brakeBiasTemp == -1 && brakeBias != 0)
-                        brakeBiasTemp = brakeBias;
+                    //if (engineMapTemp == -1 && engineMap != 0)
+                    //    engineMapTemp = engineMap;
+                    //#endregion
 
-                    if (engineMapTemp == -1 && engineMap != 0)
-                        engineMapTemp = engineMap;
-                    #endregion
+                    //#region Any setting on car flashes here
 
-                    #region Any setting on car flashes here
+                    //CarSettingPanelFlash(e, ref boost, ref boostTemp, "BOOST");
+                    //CarSettingPanelFlash(e, ref tractionControl1, ref tractionControl1Temp, "TC1");
+                    //CarSettingPanelFlash(e, ref tractionControl2, ref tractionControl2Temp, "TC2");
+                    //CarSettingPanelFlash(e, ref brakeBias, ref brakeBiasTemp, "FRT BRB");
+                    //CarSettingPanelFlash(e, ref engineMap, ref engineMapTemp, "STRAT");
 
-                    CarSettingPanelFlash(e, ref boost, ref boostTemp, "BOOST");
-                    CarSettingPanelFlash(e, ref tractionControl1, ref tractionControl1Temp, "TC1");
-                    CarSettingPanelFlash(e, ref tractionControl2, ref tractionControl2Temp, "TC2");
-                    CarSettingPanelFlash(e, ref brakeBias, ref brakeBiasTemp, "FRT BRB");
-                    CarSettingPanelFlash(e, ref engineMap, ref engineMapTemp, "STRAT");
+                    //#endregion
 
-                    #endregion
-
-                    //az UpdateLapTime mögé kellett rakjam, hogy legyen egy temp kör szám, így az updatelaptimeban majd a legfrissebbel hasonlitja ezt ami előtte bennevolt
-                    lapCountTemp = e.TelemetryInfo.Lap.Value;
+                    ////az UpdateLapTime mögé kellett rakjam, hogy legyen egy temp kör szám, így az updatelaptimeban majd a legfrissebbel hasonlitja ezt ami előtte bennevolt
+                    //lapCountTemp = e.TelemetryInfo.Lap.Value;
 
 
                     //Textek kiirása
+
                     rpm.Text = Math.Round(e.TelemetryInfo.RPM.Value).ToString();
                 }
+
+                s.Stop();
+                var ej = s.ElapsedMilliseconds;
+                //log.Add(JsonConvert.SerializeObject(e.TelemetryInfo));
+                
             }
             catch (Exception ex)
             {

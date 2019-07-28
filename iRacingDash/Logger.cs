@@ -22,15 +22,15 @@ namespace iRacingDash
         {
             
 
-            using (StreamWriter w = File.AppendText(path))
-            {
-                WriteOutput(title, log, w);
-            }
+            //using (StreamWriter w = File.AppendText(path))
+            //{
+            //    WriteOutput(title, log, w);
+            //}
 
-            using (StreamReader r = File.OpenText(path))
-            {
-                DumpLog(r);
-            }
+            //using (StreamReader r = File.OpenText(path))
+            //{
+            //    DumpLog(r);
+            //}
         }
 
         private void WriteOutput(string title, string logMessage, TextWriter w)

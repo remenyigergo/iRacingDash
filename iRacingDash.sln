@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iRSDKSharp", "iRacingSdkWra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WECOverlay", "WECOverlay\WECOverlay.csproj", "{83626C6D-C41E-48C8-BA14-E269C88BA844}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MockSdkWrapper", "MockSdkWrapper\MockSdkWrapper.csproj", "{9C7FB2FA-4448-4F59-9970-8481696A4235}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{449730D6-39DE-4BF9-A68A-87E1B4F0E7E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{83626C6D-C41E-48C8-BA14-E269C88BA844}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83626C6D-C41E-48C8-BA14-E269C88BA844}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83626C6D-C41E-48C8-BA14-E269C88BA844}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C7FB2FA-4448-4F59-9970-8481696A4235}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C7FB2FA-4448-4F59-9970-8481696A4235}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C7FB2FA-4448-4F59-9970-8481696A4235}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C7FB2FA-4448-4F59-9970-8481696A4235}.Release|Any CPU.Build.0 = Release|Any CPU
+		{449730D6-39DE-4BF9-A68A-87E1B4F0E7E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{449730D6-39DE-4BF9-A68A-87E1B4F0E7E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{449730D6-39DE-4BF9-A68A-87E1B4F0E7E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{449730D6-39DE-4BF9-A68A-87E1B4F0E7E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

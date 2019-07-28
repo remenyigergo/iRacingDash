@@ -764,6 +764,7 @@
             this.engine_panel.Name = "engine_panel";
             this.engine_panel.Size = new System.Drawing.Size(381, 227);
             this.engine_panel.TabIndex = 41;
+            this.engine_panel.Visible = false;
             // 
             // engine_value
             // 
