@@ -20,6 +20,7 @@ namespace WECOverlay
         private static DateTime now = DateTime.Now;
         private Turn turn;
         private static Configurator s = new Configurator();
+        
 
         //public static string logPath = s.Configurate<string>("log", "config", "Path");
         public static string trackPath = s.Configurate<string>("tracks", "config", "Path");
@@ -69,6 +70,7 @@ namespace WECOverlay
         private float actual_rpm;
         private float maxRpm = 7300;
 
+
         public Form1()
         {
             InitializeComponent();
@@ -80,7 +82,6 @@ namespace WECOverlay
                 turn = new Turn();
                 turn.Visible = turnFormEnabled;
             }
-            
 
             wrapper = new SdkWrapper();
             wrapper.Start();
@@ -168,7 +169,7 @@ namespace WECOverlay
             {
                 turn.label1.Font = new Font("Rawhide Raw 2016", 15, FontStyle.Regular);
                 turn.label2.Font = new Font("Rawhide Raw 2016", 20, FontStyle.Regular);
-                turn.label1.Text = "Distance";
+                turn.label1.Text = trackId+" Distance";
                 turn.label2.Text = Convert.ToInt32(distance) + " m";
             }
         }
@@ -243,6 +244,7 @@ namespace WECOverlay
 
                 //Pedálok két képe mozgatása
                 Pedals(e);
+
 
                 //A Class szinezéshez állítgatom
                 sessionChanged = false;
