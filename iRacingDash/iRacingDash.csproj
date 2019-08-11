@@ -36,9 +36,13 @@
     <ApplicationIcon>dash-icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="iRacingSdkWrapper, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>F:\Dokumentumok\SZABI\iRacingMock\iRacingMock.ClassLibrary\bin\Debug\iRacingSdkWrapper.dll</HintPath>
+    </Reference>
     <Reference Include="iRSDKSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\iRacingSdkWrapper\irsdkSharp\bin\Debug\iRSDKSharp.dll</HintPath>
+      <HintPath>F:\Dokumentumok\SZABI\iRacingMock\iRacingMock.ClassLibrary\bin\Debug\iRSDKSharp.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -98,9 +102,9 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\iRacingSdkWrapper\iRacingSdkWrapper\iRacingSdkWrapper.csproj">
-      <Project>{D6DB568B-35B3-49EB-8CB3-E4E5F1424247}</Project>
-      <Name>iRacingSdkWrapper</Name>
+    <ProjectReference Include="F:\Dokumentumok\SZABI\iRacingMock\iRacingMock.ClassLibrary\iRacingMock.ClassLibrary.csproj">
+      <Project>{43bdb9e0-8aeb-4c12-939a-d792e9861b11}</Project>
+      <Name>iRacingMock.ClassLibrary</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

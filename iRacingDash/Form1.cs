@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
+using iRacingMock.ClassLibrary;
 using iRacingSdkWrapper;
 using iRSDKSharp;
 using iRacingSdkWrapper.Bitfields;
@@ -23,7 +24,7 @@ namespace iRacingDash
     public partial class Form1 : Form
     {
         private static DateTime now = DateTime.Now;
-        private SdkWrapper wrapper;
+        private ISdkWrapper wrapper;
         private iRacingSDK sdk;
 
 
@@ -138,7 +139,9 @@ namespace iRacingDash
             InitializeComponent();
 
             sdk = new iRacingSDK();
-            wrapper = new SdkWrapper();
+            //wrapper = new SdkWrapper();
+            wrapper = new Mock("F:\\export.csv");
+
 
             Last_lap_title.ForeColor = Color.Gold;
             //CONFIGS
@@ -157,10 +160,11 @@ namespace iRacingDash
             shiftLight2Percent = s.Configurate<int>("led", "config", "ShiftLightYellowPercent");
             redLinePercent = s.Configurate<int>("led", "config", "ShiftLightRedPercent");
 
-            wrapper.Start();
+            
             wrapper.TelemetryUpdateFrequency = s.Configurate<int>("fps", "config", "TelemetryFps");
             wrapper.TelemetryUpdated += OnTelemetryUpdated;
             wrapper.SessionInfoUpdated += OnSessionInfoUpdated;
+            wrapper.Start();
 
             led1_1.Visible = false;
             led1_2.Visible = false;
@@ -352,7 +356,8 @@ namespace iRacingDash
         private void WarningFlashes(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
             flashingFpsCounter = 0;
-            var sessionFlag = e.TelemetryInfo.SessionFlags.Value.ToString();
+            var sessionFlag = e.TelemetryInfo.SessionFlags?.Value.ToString();
+            if (sessionFlag == null) return;
 
 
             var sessionFlags = (SessionFlags)Enum.Parse(typeof(SessionFlags), sessionFlag.Replace('|', ','));
@@ -471,7 +476,8 @@ namespace iRacingDash
                 //    fuel_to_finish_value.Text = "N/A";
                 //}
 
-                if (sessionNumberTemp != sessionNumber || subSessionNumber != subSessionNumberTemp)
+                if (false)
+                //if (sessionNumberTemp != sessionNumber || subSessionNumber != subSessionNumberTemp)
                 {
                     #region Variables reset
 
@@ -827,7 +833,7 @@ namespace iRacingDash
 
                 if (fuelLapStart != -1 && fuelLapStart - actualFuelLevel > 0)
                 {
-                    if (sessionType == "Race")
+                    if (true)
                     {
                         if (lapCount !=  2)
                             fuelUsagePerLap.Add(fuelLapStart - actualFuelLevel);
