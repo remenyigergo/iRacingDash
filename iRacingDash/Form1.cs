@@ -140,8 +140,8 @@ namespace iRacingDash
             InitializeComponent();
 
             sdk = new iRacingSDK();
-            //wrapper = new SdkWrapper();
-            wrapper = new iRacingMock.ClassLibrary.Mock("D:\\_20190806_214900.csv");
+            wrapper = new SdkWrapper();
+            //wrapper = new iRacingMock.ClassLibrary.Mock("D:\\_20190806_214900.csv");
 
             InitializeDash();
 
