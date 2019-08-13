@@ -23,7 +23,7 @@ namespace iRacingDash
     public partial class Form1 : Form
     {
         private static DateTime now = DateTime.Now;
-        private SdkWrapper wrapper;
+        private ISdkWrapper wrapper;
         private iRacingSDK sdk;
 
 
@@ -101,6 +101,8 @@ namespace iRacingDash
         private double lapTime;
         private string lapTimeString;
         float currentLap;
+        private bool raceStarted;
+        private float raceStartLap;
 
         //Delta
         private int deltaLimit = 2;
@@ -138,12 +140,14 @@ namespace iRacingDash
             InitializeComponent();
 
             sdk = new iRacingSDK();
-            wrapper = new SdkWrapper();
+            //wrapper = new SdkWrapper();
+            wrapper = new iRacingMock.ClassLibrary.Mock("D:\\_20190806_214900.csv");
 
-            Last_lap_title.ForeColor = Color.Gold;
+            InitializeDash();
+
+            
             //CONFIGS
             //Car RPM
-
             maxRpm = s.Configurate<int>("car", "config", "MaxRpm");
 
             //Window setup
@@ -157,10 +161,17 @@ namespace iRacingDash
             shiftLight2Percent = s.Configurate<int>("led", "config", "ShiftLightYellowPercent");
             redLinePercent = s.Configurate<int>("led", "config", "ShiftLightRedPercent");
 
-            wrapper.Start();
+            
             wrapper.TelemetryUpdateFrequency = s.Configurate<int>("fps", "config", "TelemetryFps");
             wrapper.TelemetryUpdated += OnTelemetryUpdated;
             wrapper.SessionInfoUpdated += OnSessionInfoUpdated;
+            wrapper.Start();
+
+        }
+
+        private void InitializeDash()
+        {
+            Last_lap_title.ForeColor = Color.Gold;
 
             led1_1.Visible = false;
             led1_2.Visible = false;
@@ -352,8 +363,8 @@ namespace iRacingDash
         private void WarningFlashes(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
             flashingFpsCounter = 0;
-            var sessionFlag = e.TelemetryInfo.SessionFlags.Value.ToString();
-
+            var sessionFlag = e.TelemetryInfo.SessionFlags.Value?.ToString();
+            if (sessionFlag == null) return;
 
             var sessionFlags = (SessionFlags)Enum.Parse(typeof(SessionFlags), sessionFlag.Replace('|', ','));
 
@@ -372,6 +383,10 @@ namespace iRacingDash
                     LightPanel(warning_panel, Color.Yellow);
                     break;
                 case var t when t.HasFlag(SessionFlags.Green):
+                    raceStarted = true;
+                    raceStartLap = currentLap;
+                    LightPanel(warning_panel, Color.Green);
+                    break;
                 case var t1 when t1.HasFlag(SessionFlags.GreenHeld):
                 case var t2 when t2.HasFlag(SessionFlags.OneLapToGreen):
                     LightPanel(warning_panel, Color.Green);
@@ -383,33 +398,6 @@ namespace iRacingDash
                     warning_panel.BackColor = Color.Transparent;
                     break;
             }
-
-            //if (sessionFlag.Contains("Repair"))
-            //{
-            //    LightPanel(warning_panel, Color.Black);
-            //}
-            //else
-            //if (sessionFlag.Contains("Blue"))
-            //{
-            //    LightPanel(warning_panel, Color.Blue);
-            //}
-            //else if (sessionFlag.Contains("Yellow") || sessionFlag.Contains("Caution") ||
-            //         sessionFlag.Contains("CautionWaving") || sessionFlag.Contains("YellowWaving"))
-            //{
-            //    LightPanel(warning_panel, Color.Yellow);
-            //}
-            //else if (sessionFlag.Contains("Green"))
-            //{
-            //    LightPanel(warning_panel, Color.Green);
-            //}
-            //else if (sessionFlag.Contains("White"))
-            //{
-            //    LightPanel(warning_panel, Color.White);
-            //}
-            //else
-            //{
-            //    warning_panel.BackColor = Color.Transparent;
-            //}
 
 
             if (fuelLevel < 5)
@@ -471,7 +459,7 @@ namespace iRacingDash
                 //    fuel_to_finish_value.Text = "N/A";
                 //}
 
-                if (sessionNumberTemp != sessionNumber || subSessionNumber != subSessionNumberTemp)
+                if (false)
                 {
                     #region Variables reset
 
@@ -523,8 +511,8 @@ namespace iRacingDash
                     if (fpsCounter == (int)(wrapper.TelemetryUpdateFrequency / NonRTCalculationFPS))
                         NonRealtimeCalculations(e);
 
-                    if (flashingFpsCounter == (int)(wrapper.TelemetryUpdateFrequency / flashingFps))
-                        WarningFlashes(e);
+                    //if (flashingFpsCounter == (int)(wrapper.TelemetryUpdateFrequency / flashingFps))
+                    //    WarningFlashes(e);
 
                     #region Set boost (if exist)
 
@@ -595,7 +583,7 @@ namespace iRacingDash
                     //az UpdateLapTime mögé kellett rakjam, hogy legyen egy temp kör szám, így az updatelaptimeban majd a legfrissebbel hasonlitja ezt ami előtte bennevolt
                     lapCountTemp = e.TelemetryInfo.Lap.Value;
 
-                    if (timerTime == -1 && remainingTime == -1)
+                    if (timerTime == -1 && remainingTime == -1 && raceOver)
                         timerTime = (int)GetAverageFromList(laptimes);
 
                     //Textek kiirása
@@ -825,11 +813,11 @@ namespace iRacingDash
             {
                 var actualFuelLevel = e.TelemetryInfo.FuelLevel.Value;
 
-                if (fuelLapStart != -1 && fuelLapStart - actualFuelLevel > 0)
+                if (fuelLapStart != -1 && fuelLapStart - actualFuelLevel > 2)
                 {
-                    if (sessionType == "Race")
+                    if (true) //sessionType == "Race"
                     {
-                        if (lapCount !=  2)
+                        if (lapCount > 2) //lapCount >= raceStartLap
                             fuelUsagePerLap.Add(fuelLapStart - actualFuelLevel);
                     }
                     else
@@ -1314,8 +1302,6 @@ namespace iRacingDash
 
 
             //átlagos eset, ha az óra lejárt VISZONT kezdéskor is végig -1 ezért azt is kezelni kell
-            //1. kör versenyben mrá a felvezetőkör
-            //2. kör lesz az 1. kör hivatalosan
             if (lapCount > 2)
             {
                 if (remainingTime != -1)
