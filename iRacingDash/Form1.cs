@@ -16,6 +16,8 @@ using System.Windows.Forms;
 using iRacingSdkWrapper;
 using iRSDKSharp;
 using iRacingSdkWrapper.Bitfields;
+using iRacingDash.Sessions;
+using iRacingDash.Enums;
 
 //EngineWarnings : pits = 16, rpmMaximum = 32, normal = 0, stalled = 30
 namespace iRacingDash
@@ -23,8 +25,8 @@ namespace iRacingDash
     public partial class Form1 : Form
     {
         private static DateTime now = DateTime.Now;
-        private ISdkWrapper wrapper;
-        private iRacingSDK sdk;
+        private SdkWrapper _wrapper;
+        private iRacingSDK _sdk;
 
 
         private delegate void SafeCallDelegate(bool visible, string time);
@@ -36,40 +38,42 @@ namespace iRacingDash
         private Logger fuelComputeLogger;
         private Logger errorLogger;
 
+        private Point location;
+        private int fps;
+
         //LEDS
-        private float minRpmPercent;
+        //private float minRpmPercent;
 
-        private float shiftLight1Percent;
-        private float shiftLight2Percent;
-        private float redLinePercent;
+        //private float shiftLight1Percent;
+        //private float shiftLight2Percent;
+        //private float redLinePercent;
 
-        //COMMON
-        private int DriverCarIdx = -9999;
+        ////COMMON
+        //private int DriverCarIdx = -9999;
 
-        private int gearValue = 0;
+        //private int gearValue = 0;
 
         private float maxRpm;
-        private float lapDist = 0;
-        private int lapCount = 0;
-        private int lapCountTemp = -1;
-        private float lapCountPrevious = 0;
-        private float trackLength = -9999;
-        private int position;
-        private bool initForFuel = true;
-        private bool initLapTime = true;
-        private int engineWarning;
+        //private float lapDist = 0;
+        //private int lapCount = 0;
+        //private int lapCountTemp = -1;
+        //private float lapCountPrevious = 0;
+        //private float trackLength = -9999;
+        //private int position;
+        //private bool initForFuel = true;
+        //private bool initLapTime = true;
+        //private int engineWarning;
         private string sessionType;
-        private string raceWeek;
-        private string eventType;
-        private string trackName;
+        //private string raceWeek;
+        //private string eventType;
+        //private string trackName;
 
         private int NonRTCalculationFPS = s.Configurate<int>("fps", "config", "NonRealtimeCalculationsFps");
-        private int fpsCounter = 0;
-        private int flashingFps = 2;
-        private int flashingFpsCounter = 0;
+        //private int fpsCounter = 0;
+        //private int flashingFps = 2;
+        //private int flashingFpsCounter = 0;
 
-        private int settingPanelFps = 2;
-        private int settingPanelFpsCounter = -1;
+        
 
         private static System.Timers.Timer timer1;
         private static int timerTime = -1;
@@ -107,13 +111,7 @@ namespace iRacingDash
         //Delta
         private int deltaLimit = 2;
 
-        //Panelek
-        private Panel settingsPanel;
-
-        private Label settingLabelTitle;
-        private Label settingLabelValue;
-
-        private Label idleClock;
+        
 
 
         //Settings on car
@@ -133,1248 +131,472 @@ namespace iRacingDash
         private int engineMapTemp = -1;
 
         //
-        private PictureBox idleImg = new PictureBox();
 
+        private DefaultSession defaultSession;
+        private Dash dash;
         public Form1()
         {
             InitializeComponent();
 
-            sdk = new iRacingSDK();
-            wrapper = new SdkWrapper();
-            //wrapper = new iRacingMock.ClassLibrary.Mock("D:\\_20190806_214900.csv");
+            _sdk = new iRacingSDK();
+            _wrapper = new SdkWrapper();
+            //_wrapper = new iRacingMock.ClassLibrary.Mock("D:\\_20190810_115035.csv");
 
-            InitializeDash();
+           //defaultSession = new DefaultSession();
+            dash = new Dash(this, _wrapper);
+            dash.InitDash();
+            new Configurator().StartConfig(ref maxRpm, ref location, ref dash.minRpmPercent, ref dash.shiftLight1Percent, ref dash.shiftLight2Percent, ref dash.redLinePercent, ref fps);
 
+            Location = location;
+            _wrapper.TelemetryUpdateFrequency = fps;
+
+            SubscribeToEvents();
+            _wrapper.Start();
+        }
+
+        public void SubscribeToEvents()
+        {
+            _wrapper.Connected += _wrapper_Connected;
+            //_wrapper.TelemetryUpdated += OnTelemetryUpdated;
+            _wrapper.SessionInfoUpdated += OnSessionInfoUpdated;
+        }
+
+        private void _wrapper_Connected(object sender, SdkWrapper.SessionInfoUpdatedEventArgs e)
+        {
+            sessionType = e.SessionInfo["SessionInfo"]["Sessions"]["SessionNum", sessionNumber]["SessionType"].Value;
+            var sessionTypeEnum = GetEnumValueFromDescription<SessionTypeEnum>(sessionType);
             
-            //CONFIGS
-            //Car RPM
-            maxRpm = s.Configurate<int>("car", "config", "MaxRpm");
 
-            //Window setup
-            var X = s.Configurate<int>("window", "config", "PositionX");
-            var Y = s.Configurate<int>("window", "config", "PositionY");
-            this.Location = new Point((int)X, (int)Y);
-
-            //ShiftLights setup
-            minRpmPercent = s.Configurate<int>("led", "config", "MinimumRPMPercent");
-            shiftLight1Percent = s.Configurate<int>("led", "config", "ShiftLightGreenPercent");
-            shiftLight2Percent = s.Configurate<int>("led", "config", "ShiftLightYellowPercent");
-            redLinePercent = s.Configurate<int>("led", "config", "ShiftLightRedPercent");
-
-            
-            wrapper.TelemetryUpdateFrequency = s.Configurate<int>("fps", "config", "TelemetryFps");
-            wrapper.TelemetryUpdated += OnTelemetryUpdated;
-            wrapper.SessionInfoUpdated += OnSessionInfoUpdated;
-            wrapper.Start();
-
-        }
-
-        private void InitializeDash()
-        {
-            Last_lap_title.ForeColor = Color.Gold;
-
-            led1_1.Visible = false;
-            led1_2.Visible = false;
-            led1_3.Visible = false;
-            led1_4.Visible = false;
-            led1_5.Visible = false;
-            led1_6.Visible = false;
-            led2_1.Visible = false;
-            led2_2.Visible = false;
-            led2_3.Visible = false;
-            led3_1.Visible = false;
-            led3_2.Visible = false;
-            led3_3.Visible = false;
-
-            Laptime_value.ForeColor = Color.LawnGreen;
-
-            //Create labels and panels
-            settingLabelTitle = CreateLabel("settingLabelTitle", "Setting", new Size(this.Width, 150), new Point(0, 0),
-                Color.Black, Color.DarkGray, new Font("Microsoft YaHei", 40, FontStyle.Bold), false);
-            settingLabelValue = CreateLabel("settingLabelValue", "Value", new Size(this.Width, 150), new Point(0, 150),
-                Color.Black, Color.DarkGray, new Font("Microsoft YaHei", 40, FontStyle.Bold), false);
-            settingLabelTitle.TextAlign = ContentAlignment.BottomCenter;
-            settingLabelValue.TextAlign = ContentAlignment.TopCenter;
-
-            settingsPanel = CreateSettingWindow(new Point(0, 0), Color.DarkGray, new Size(this.Width, this.Height),
-                false);
-
-
-            CreateIdle();
-
-
-            //panelek előtérbe helyezése
-            settingLabelTitle.BringToFront();
-            settingLabelValue.BringToFront();
-            //settingsPanel.BringToFront();
-
-
-            Thread t = new Thread(new ThreadStart(CheckWrapperRunning));
-            t.Start();
-        }
-
-        private void WriteTextSafe(bool visible, string time)
-        {
-            if (idleImg.InvokeRequired)
+            switch (sessionTypeEnum)
             {
-                var d = new SafeCallDelegate(WriteTextSafe);
-                Invoke(d, new object[] { visible, time });
-            }
-            else
-            {
-                idleImg.Visible = visible;
-                idleClock.Text = time;
-            }
-
-            if (idleClock.InvokeRequired)
-            {
-                var d = new SafeCallDelegate(WriteTextSafe);
-                Invoke(d, new object[] { visible, time });
-            }
-            else
-            {
-                idleClock.Visible = visible;
-                idleClock.Text = time;
-            }
-
-        }
-
-
-        private void SetText(bool value, string time)
-        {
-            WriteTextSafe(value, time);
-        }
-
-        private void CheckWrapperRunning()
-        {
-            idleClock.Text = string.Format("{0:00}:{1:00}", DateTime.Now.Hour, DateTime.Now.Minute);
-            while (true)
-            {
-                var isConnected = wrapper.IsConnected;
-
-                if (isConnected)
-                {
-                    WriteTextSafe(false, string.Format("{0:00}:{1:00}", DateTime.Now.Hour, DateTime.Now.Minute));
-                }
-                else
-                {
-                    WriteTextSafe(true, string.Format("{0:00}:{1:00}", DateTime.Now.Hour, DateTime.Now.Minute));
-                }
-
-
-                Thread.Sleep(3000);
-            }
-
-        }
-
-        private void CreateIdle()
-        {
-            Image image = iRacingDash.Properties.Resources.idle;
-            this.idleImg = new PictureBox
-            {
-                Name = "idleImg",
-                Size = new Size(370, 300),
-                Location = new Point(0, 0),
-                Image = image,
-            };
-            this.Controls.Add(idleImg);
-            idleImg.MouseDown += new MouseEventHandler(Idle_MouseDown);
-            idleImg.MouseUp += new MouseEventHandler(Idle_MouseUp);
-            idleImg.MouseMove += new MouseEventHandler(Idle_MouseMove);
-            idleImg.DoubleClick += new EventHandler(Idle_DoubleClick);
-
-            idleImg.Visible = true;
-
-
-            idleClock = CreateLabel("idleClock", "00:00", new Size(130, 50), new Point(120, 30), Color.White, Color.Transparent,
-                new Font("Microsoft YaHei", 30, FontStyle.Regular), true);
-            idleClock.Parent = idleImg;
-
-            idleImg.BringToFront();
-            idleClock.BringToFront();
-        }
-
-
-        //InPitsV2, BrakeBias, Gear, Fuel, TC
-        private void NonRealtimeCalculations(SdkWrapper.TelemetryUpdatedEventArgs e)
-        {
-            fpsCounter = 0;
-
-            InPitsV2(e);
-            CalculateGear(e);
-            CalculateFuel(e);
-
-
-            remainingTime = e.TelemetryInfo.SessionTimeRemain.Value;
-
-
-            #region Set Fuel level
-
-            fuelLevel = e.TelemetryInfo.FuelLevel.Value;
-            Fuel_remain_value.Text = string.Format("{0:00.00}", fuelLevel);
-
-            #endregion
-
-            #region EngineWarnings (Stalled engine)
-
-            engine_panel.Visible = engineWarning == 30 || engineWarning == 14 ? true : false;
-
-            #endregion
-
-
-            if (DriverCarIdx != -9999)
-                position = e.TelemetryInfo.CarIdxPosition.Value[DriverCarIdx];
-        }
-
-
-        private Panel CreateSettingWindow(Point location, Color color, Size size, bool visible)
-        {
-            Panel panel = new Panel();
-            panel.Location = location;
-            panel.BackColor = color;
-            panel.Size = size;
-            panel.Visible = visible;
-
-            if (!this.Controls.Contains(panel))
-                this.Controls.Add(panel);
-
-            return panel;
-            //settingsPanel.BringToFront();
-        }
-
-        private Label CreateLabel(string name, string text, Size size, Point location, Color foreColor, Color backColor, Font font,
-            bool visible)
-        {
-            Label label = new Label();
-            label.Text = text;
-            label.Location = location;
-            label.Visible = visible;
-            label.ForeColor = foreColor;
-            label.BackColor = backColor;
-            label.Font = font;
-            label.Name = name;
-            label.Size = size;
-
-            this.Controls.Add(label);
-
-            return label;
-        }
-
-        private void WarningFlashes(SdkWrapper.TelemetryUpdatedEventArgs e)
-        {
-            flashingFpsCounter = 0;
-            var sessionFlag = e.TelemetryInfo.SessionFlags.Value?.ToString();
-            if (sessionFlag == null) return;
-
-            var sessionFlags = (SessionFlags)Enum.Parse(typeof(SessionFlags), sessionFlag.Replace('|', ','));
-
-            switch (sessionFlags)
-            {
-                case var t when t.HasFlag(SessionFlags.Repair):
-                    LightPanel(warning_panel, Color.Black);
+                case SessionTypeEnum.OfflineTesting:
+                    _wrapper.TelemetryUpdated += new OfflineTestingSession(NonRTCalculationFPS, this, _wrapper, dash).OnTelemetryUpdated;
+                    _wrapper.SessionInfoUpdated += new OfflineTestingSession(NonRTCalculationFPS, this, _wrapper, dash).OnSessionInfoUpdated;
                     break;
-                case var t when t.HasFlag(SessionFlags.Blue):
-                    LightPanel(warning_panel, Color.Blue);
+                case SessionTypeEnum.Practice:
                     break;
-                case var t when t.HasFlag(SessionFlags.Yellow):
-                case var t1 when t1.HasFlag(SessionFlags.Caution):
-                case var t2 when t2.HasFlag(SessionFlags.CautionWaving):
-                case var t3 when t3.HasFlag(SessionFlags.YellowWaving):
-                    LightPanel(warning_panel, Color.Yellow);
+                case SessionTypeEnum.Qualify:
                     break;
-                case var t when t.HasFlag(SessionFlags.Green):
-                    raceStarted = true;
-                    raceStartLap = currentLap;
-                    LightPanel(warning_panel, Color.Green);
+                case SessionTypeEnum.WarmUp:
                     break;
-                case var t1 when t1.HasFlag(SessionFlags.GreenHeld):
-                case var t2 when t2.HasFlag(SessionFlags.OneLapToGreen):
-                    LightPanel(warning_panel, Color.Green);
-                    break;
-                case var t when t.HasFlag(SessionFlags.White):
-                    LightPanel(warning_panel, Color.White);
+                case SessionTypeEnum.Race:
                     break;
                 default:
-                    warning_panel.BackColor = Color.Transparent;
                     break;
             }
-
-
-            if (fuelLevel < 5)
-                panel4.BackColor = Color.DarkRed;
-            else if (fuelLevel < 10)
-                LightPanel(panel4, Color.DarkRed);
-            else
-                panel4.BackColor = Color.Transparent;
-
-            if (engineWarning == 30 || engineWarning == 14)
-            {
-                if (engine_value.Visible)
-                    engine_value.Visible = false;
-                else
-                    engine_value.Visible = true;
-            }
         }
 
-
-        private void LightPanel(Panel panel, Color color)
+        public static T GetEnumValueFromDescription<T>(string description)
         {
-            if (panel.BackColor != Color.Transparent)
+            MemberInfo[] fis = typeof(T).GetFields();
+
+            foreach (var fi in fis)
             {
-                panel.BackColor = Color.Transparent;
+                DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+
+                if (attributes != null && attributes.Length > 0 && attributes[0].Description == description)
+                    return (T)Enum.Parse(typeof(T), fi.Name);
             }
-            else
-            {
-                panel.BackColor = color;
-            }
+
+            throw new Exception("Not found");
         }
 
-        private void OnTelemetryUpdated(object sender, SdkWrapper.TelemetryUpdatedEventArgs e)
-        {
-            try
-            {
-                fpsCounter++;
-                flashingFpsCounter++;
-                settingPanelFpsCounter++;
-
-                //Folyamatosan frissülő adatok
-                sessionNumber = e.TelemetryInfo.SessionNum.Value;
-
-
-                if (sessionNumberTemp == -1)
-                {
-                    //init sessionNum
-                    sessionNumberTemp = sessionNumber;
-                }
-
-
-                //if (!e.TelemetryInfo.IsOnTrack.Value)
-                //{
-                //    fuelLapStart = -1;
-                //    fuelUsagePerLap = new List<double>();
-                //    Fuel_to_fill_value.Text = "N/A";
-                //    Fuel_remain_value.Text = "N/A";
-                //    Laps_estimate_value.Text = "N/A";
-                //    Last_lap_value.Text = "N/A";
-                //    fuel_to_finish_value.Text = "N/A";
-                //}
-
-                if (false)
-                {
-                    #region Variables reset
-
-                    lapCount = 0;
-                    lapCountTemp = -1;
-                    lapCountPrevious = 0;
-
-                    fuelLapStart = -1;
-                    fuelUsagePerLap.Clear();
-                    DriverCarIdx = -9999;
-                    remainingTime = 0;
-                    fuelLevel = 0;
-                    trackLength = -9999;
-
-
-                    Fuel_to_fill_value.Text = "N/A";
-                    Fuel_remain_value.Text = "N/A";
-                    Laps_estimate_value.Text = "N/A";
-                    Brake_bias_value.Text = "N/A";
-                    Speed_value.Text = "N/A";
-                    Delta_value.Text = "N/A";
-                    //traction1_value.Text = "N/A";
-                    boost_value.Text = "N/A";
-                    Laptime_value.Text = "00:00.000";
-                    rpm.Text = "N/A";
-                    gear.Text = "N";
-                    Last_lap_value.Text = "N/A";
-                    fuel_to_finish_value.Text = "N/A";
-                    initForFuel = true;
-                    raceOver = false;
-
-                    sessionNumberTemp = sessionNumber;
-
-                    //if (newLapLogger == null)
-                    //    newLapLogger = new Logger(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + dateInString + "\\errorLog.txt");
-                    //newLapLogger.Log("New session", "");
-
-                    #endregion
-                }
-                else
-                {
-                    Speed_value.Text = Math.Round(e.TelemetryInfo.Speed.Value * 3.6).ToString();
-
-                    //újraszámoljuk a szükséges adatokat
-                    UpdateRpmLights(e);
-                    NewLapCalculation(e);
-                    CarLeftRight(e);
-
-                    if (fpsCounter == (int)(wrapper.TelemetryUpdateFrequency / NonRTCalculationFPS))
-                        NonRealtimeCalculations(e);
-
-                    //if (flashingFpsCounter == (int)(wrapper.TelemetryUpdateFrequency / flashingFps))
-                    //    WarningFlashes(e);
-
-                    #region Set boost (if exist)
-
-                    if (wrapper.GetData("dcBoostLevel") != null)
-                    {
-                        boost = Int32.Parse(wrapper.GetData("dcBoostLevel").ToString());
-                        boost_value.Text = boost.ToString();
-                    }
-                    //var dcFuelMixture = wrapper.GetData("dcFuelMixture");
-                    #endregion
-
-                    #region Set TC1 TC2
-
-                    if (wrapper.GetData("dcTractionControl") != null)
-                        tractionControl1 = Int32.Parse(wrapper.GetData("dcTractionControl").ToString());
-
-                    if (wrapper.GetData("dcTractionControl2") != null)
-                        tractionControl2 = Int32.Parse(wrapper.GetData("dcTractionControl2").ToString());
-                    #endregion
-
-                    #region Set Brake bias
-
-                    if (wrapper.GetData("dcBrakeBias") != null)
-                    {
-                        Brake_bias_value.Text = string.Format("{0:00.00}", Convert.ToDouble(wrapper.GetData("dcBrakeBias").ToString()));
-                        brakeBias = float.Parse(wrapper.GetData("dcBrakeBias").ToString());
-                    }
-
-
-                    #endregion
-
-                    #region Set Engine Map
-                    if (wrapper.GetData("dcThrottleShape") != null)
-                    {
-                        engineMap = Int32.Parse(wrapper.GetData("dcThrottleShape").ToString());
-                        boost_value.Text = engineMap.ToString();
-                    }
-                    #endregion
-
-                    #region Init temp values for car settings
-
-                    if (boostTemp == -1 && boost != 0)
-                        boostTemp = boost;
-
-                    if (tractionControl1Temp == -1 && tractionControl1 != 0)
-                        tractionControl1Temp = tractionControl1;
-
-                    if (tractionControl2Temp == -1 && tractionControl2 != 0)
-                        tractionControl2Temp = tractionControl2;
-
-                    if (brakeBiasTemp == -1 && brakeBias != 0)
-                        brakeBiasTemp = brakeBias;
-
-                    if (engineMapTemp == -1 && engineMap != 0)
-                        engineMapTemp = engineMap;
-                    #endregion
-
-                    #region Any setting on car flashes here
-                    CarSettingPanelFlash(e, ref brakeBias, ref brakeBiasTemp, "FRT BRB");
-                    CarSettingPanelFlash(e, ref boost, ref boostTemp, "BOOST");
-                    CarSettingPanelFlash(e, ref tractionControl1, ref tractionControl1Temp, "TC1");
-                    CarSettingPanelFlash(e, ref tractionControl2, ref tractionControl2Temp, "TC2");
-
-                    CarSettingPanelFlash(e, ref engineMap, ref engineMapTemp, "STRAT");
-
-                    #endregion
-
-                    //az UpdateLapTime mögé kellett rakjam, hogy legyen egy temp kör szám, így az updatelaptimeban majd a legfrissebbel hasonlitja ezt ami előtte bennevolt
-                    lapCountTemp = e.TelemetryInfo.Lap.Value;
-
-                    if (timerTime == -1 && remainingTime == -1 && raceOver)
-                        timerTime = (int)GetAverageFromList(laptimes);
-
-                    //Textek kiirása
-                    rpm.Text = Math.Round(e.TelemetryInfo.RPM.Value).ToString();
-                }
-            }
-            catch (Exception ex)
-            {
-                if (errorLogger == null)
-                    errorLogger = new Logger(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\iRacingDash\\logs\\iRacingDash\\" + dateInString + "_W" + raceWeek + "_" + eventType + "_" + trackName + "\\errorLog.txt");
-                errorLogger.Log("OnSessionTelemetryUpdated Error", ex.Message + Environment.NewLine + ex.StackTrace);
-            }
-        }
-
-        private void CarLeftRight(SdkWrapper.TelemetryUpdatedEventArgs e)
-        {
-            var carLeftRight = wrapper.GetData("CarLeftRight").ToString();
-
-
-            switch (Int32.Parse(carLeftRight))
-            {
-                case 2:
-                    carLeftPanel.Visible = true;
-                    break;
-                case 3:
-                    carRightPanel.Visible = true;
-                    break;
-                case 5:
-                    carLeftPanel.Visible = true;
-                    carRightPanel.Visible = true;
-                    break;
-                default:
-                    carLeftPanel.Visible = false;
-                    carRightPanel.Visible = false;
-                    break;
-            }
-
-        }
-
-        private void CarSettingPanelFlash<T>(SdkWrapper.TelemetryUpdatedEventArgs e, ref T actualValue, ref T valueTemp,
-            string title)
-        {
-            #region Set Traction Control TC1, TC2, Boost
-
-            try
-            {
-                if (!actualValue.Equals(valueTemp))
-                {
-                    if (settingLabelTitle.Visible == false)
-                        settingPanelFpsCounter = 0;
-
-                    //panelek megjelenitése
-                    if (settingPanelFpsCounter <= (int)(wrapper.TelemetryUpdateFrequency / settingPanelFps))
-                    {
-                        settingLabelTitle.Text = title;
-                        if (actualValue.GetType() == typeof(float))
-                        {
-                            settingLabelValue.Text = string.Format("{0:0.00}", actualValue);
-                        }
-                        else
-                        {
-                            settingLabelValue.Text = actualValue.ToString();
-                        }
-
-
-                        //settingsPanel.Visible = true;
-                        settingLabelTitle.Visible = true;
-                        settingLabelValue.Visible = true;
-                    }
-                    else
-                    {
-                        //settingsPanel.Visible = false;
-                        settingLabelTitle.Visible = false;
-                        settingLabelValue.Visible = false;
-                        settingPanelFpsCounter = 0;
-                        valueTemp = actualValue;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                settingLabelTitle.Text = title;
-                settingLabelValue.Text = "N/A";
-            }
-
-            #endregion
-        }
-
-        private void InPitsV2(SdkWrapper.TelemetryUpdatedEventArgs e)
-        {
-            engineWarning = Int32.Parse(wrapper.GetData("EngineWarnings").ToString());
-
-            var onPitRoad = Convert.ToBoolean(wrapper.GetData("OnPitRoad"));
-            var ontrack = Convert.ToBoolean(e.TelemetryInfo.IsOnTrack.Value);
-
-            if ((onPitRoad && initForFuel) || (ontrack && initForFuel))
-                initForFuel = false;
-
-            if (engineWarning == 16 || engineWarning == 48) //16 = pit limiter
-            {
-                Pit_Limiter_title.Visible = onPitRoad ? true : false;
-                speed_limiter.Visible = true;
-                Pit_limiter_background_panel.Visible = true;
-            }
-            else
-            {
-                Pit_Limiter_title.Visible = onPitRoad ? true : false;
-                Pit_Limiter_title.Visible = false;
-                Pit_limiter_background_panel.Visible = false;
-            }
-        }
-
-        private void CalculateGear(SdkWrapper.TelemetryUpdatedEventArgs e)
-        {
-            gearValue = e.TelemetryInfo.Gear.Value;
-            if (gearValue == -1)
-                gear.Text = "R";
-            else if (gearValue == 0)
-                gear.Text = "N";
-            else gear.Text = gearValue.ToString();
-        }
 
         private void NewLapCalculation(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
-            NewLapSettings(e);
-            UpdateLapTimeV2(e);
-            CalculateDeltaV2(e);
-            CalculateFuelUsagePerLap(e);
+            //NewLapSettings(e);
+            //UpdateLapTimeV2(e);
+            //CalculateDeltaV2(e);
+            //CalculateFuelUsagePerLap(e);
         }
 
-        private void NewLapSettings(SdkWrapper.TelemetryUpdatedEventArgs e)
-        {
-            lapDist = e.TelemetryInfo.LapDist.Value;
-            lapCount = e.TelemetryInfo.Lap.Value;
-
-            #region Init lapCountTemp
-
-            if (lapCountTemp == -1)
-            {
-                lapCountTemp = lapCount;
-                currentLap = lapCount;
-
-                //creating the logger here
-                //fuelComputeLogger = new Logger(logPath + dateInString + "\\fuelCompute.txt"); TODO
-                newLapLogger = new Logger(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\iRacingDash\\logs\\iRacingDash\\" + dateInString + "_W" + raceWeek + "_" + eventType + "_" + trackName + "\\newLap.txt");
-                this.newLapLogger.Log("Init",
-                    "lapCountTemp: " + lapCountTemp + Environment.NewLine + "  currentLap: " + currentLap);
-            }
-
-            #endregion
-
-            if (lapCount - lapCountTemp == 1)
-            {
-                //this is for the first launch, to not store biiig laptimes
-                if (initLapTime)
-                {
-                    initLapTime = false;
-                }
-                else
-                {
-                    new Thread(() =>
-                    {
-                        Thread.Sleep(2000);
-                        lapTimeString = wrapper.GetData("LapLastLapTime").ToString();
-                        lapTime = Convert.ToDouble(lapTimeString);
-
-                        if (lapTime != 0 && lapTime != -1 && !initForFuel)
-                            laptimes.Add(lapTime);
-
-                        if (initForFuel)
-                            initForFuel = false;
-
-                        lapCountPrevious = currentLap;
-                        currentLap = lapCount;
-
-                        newLapLogger.Log("In a new lap",
-                            "lapTime: " + lapTime +
-                            Environment.NewLine + "  lapCountPrevious: " + lapCountPrevious +
-                            Environment.NewLine + "  currentLap: " + currentLap +
-                            Environment.NewLine + "  initLapTime: " + initLapTime +
-                            //Environment.NewLine + "  lapTimeString: " + lapTimeString +
-                            //Environment.NewLine + "  lapTime: " + lapTime +
-                            Environment.NewLine + "  initForFuel: " + initForFuel);
-
-                    }).Start();
-                }
-
-            }
-        }
-
-        private void CalculateDeltaV2(SdkWrapper.TelemetryUpdatedEventArgs e)
-        {
-            var deltaObject = wrapper.GetData("LapDeltaToSessionBestLap");
-            var deltaInt = Convert.ToDouble(deltaObject);
-
-            if (deltaInt > 0 && deltaInt < 99.99)
-            {
-                delta_panel.BackColor = Color.Firebrick;
-                Delta_value.Text = string.Format("{0:+0.00}", deltaInt);
-            }
-            else if (deltaInt < 0 && deltaInt > -99.99)
-            {
-                delta_panel.BackColor = Color.Green;
-                Delta_value.Text = string.Format("{0:0.00}", deltaInt);
-            }
-            else if (deltaInt == 0)
-            {
-                delta_panel.BackColor = Color.FromArgb(255, 40, 40, 40);
-                Delta_value.Text = string.Format("{0:0.00}", deltaInt);
-            }
-            else if (deltaInt >= 99.99)
-            {
-                delta_panel.BackColor = Color.Firebrick;
-                Delta_value.Text = "+99.99";
-            }
-            else if (deltaInt <= -99.99)
-            {
-                delta_panel.BackColor = Color.Green;
-                Delta_value.Text = "-99.99";
-            }
-        }
-
-        private void CalculateFuelUsagePerLap(SdkWrapper.TelemetryUpdatedEventArgs e)
-        {
-            //új kör esetén
-            if (lapCount - lapCountTemp == 1)
-            {
-                var actualFuelLevel = e.TelemetryInfo.FuelLevel.Value;
-
-                if (fuelLapStart != -1 && fuelLapStart - actualFuelLevel > 2)
-                {
-                    if (true) //sessionType == "Race"
-                    {
-                        if (lapCount > 2) //lapCount >= raceStartLap
-                            fuelUsagePerLap.Add(fuelLapStart - actualFuelLevel);
-                    }
-                    else
-                    {
-                        fuelUsagePerLap.Add(fuelLapStart - actualFuelLevel);
-                    }
+        //private void NewLapSettings(SdkWrapper.TelemetryUpdatedEventArgs e)
+        //{
+        //    lapDist = e.TelemetryInfo.LapDist.Value;
+        //    lapCount = e.TelemetryInfo.Lap.Value;
+
+        //    #region Init lapCountTemp
+
+        //    if (lapCountTemp == -1)
+        //    {
+        //        lapCountTemp = lapCount;
+        //        currentLap = lapCount;
+
+        //        //creating the logger here
+        //        //fuelComputeLogger = new Logger(logPath + dateInString + "\\fuelCompute.txt"); TODO
+        //        newLapLogger = new Logger(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\iRacingDash\\logs\\iRacingDash\\" + dateInString + "_W" + raceWeek + "_" + eventType + "_" + trackName + "\\newLap.txt");
+        //        this.newLapLogger.Log("Init",
+        //            "lapCountTemp: " + lapCountTemp + Environment.NewLine + "  currentLap: " + currentLap);
+        //    }
+
+        //    #endregion
+
+        //    if (lapCount - lapCountTemp == 1)
+        //    {
+        //        //this is for the first launch, to not store biiig laptimes
+        //        if (initLapTime)
+        //        {
+        //            initLapTime = false;
+        //        }
+        //        else
+        //        {
+        //            new Thread(() =>
+        //            {
+        //                Thread.Sleep(2000);
+        //                lapTimeString = _wrapper.GetData("LapLastLapTime").ToString();
+        //                lapTime = Convert.ToDouble(lapTimeString);
+
+        //                if (lapTime != 0 && lapTime != -1 && !initForFuel)
+        //                    laptimes.Add(lapTime);
+
+        //                if (initForFuel)
+        //                    initForFuel = false;
+
+        //                lapCountPrevious = currentLap;
+        //                currentLap = lapCount;
+
+        //                newLapLogger.Log("In a new lap",
+        //                    "lapTime: " + lapTime +
+        //                    Environment.NewLine + "  lapCountPrevious: " + lapCountPrevious +
+        //                    Environment.NewLine + "  currentLap: " + currentLap +
+        //                    Environment.NewLine + "  initLapTime: " + initLapTime +
+        //                    //Environment.NewLine + "  lapTimeString: " + lapTimeString +
+        //                    //Environment.NewLine + "  lapTime: " + lapTime +
+        //                    Environment.NewLine + "  initForFuel: " + initForFuel);
+
+        //            }).Start();
+        //        }
+
+        //    }
+        //}
+
+        //private void CalculateDeltaV2(SdkWrapper.TelemetryUpdatedEventArgs e)
+        //{
+        //    var deltaObject = _wrapper.GetData("LapDeltaToSessionBestLap");
+        //    var deltaInt = Convert.ToDouble(deltaObject);
+
+        //    if (deltaInt > 0 && deltaInt < 99.99)
+        //    {
+        //        delta_panel.BackColor = Color.Firebrick;
+        //        Delta_value.Text = string.Format("{0:+0.00}", deltaInt);
+        //    }
+        //    else if (deltaInt < 0 && deltaInt > -99.99)
+        //    {
+        //        delta_panel.BackColor = Color.Green;
+        //        Delta_value.Text = string.Format("{0:0.00}", deltaInt);
+        //    }
+        //    else if (deltaInt == 0)
+        //    {
+        //        delta_panel.BackColor = Color.FromArgb(255, 40, 40, 40);
+        //        Delta_value.Text = string.Format("{0:0.00}", deltaInt);
+        //    }
+        //    else if (deltaInt >= 99.99)
+        //    {
+        //        delta_panel.BackColor = Color.Firebrick;
+        //        Delta_value.Text = "+99.99";
+        //    }
+        //    else if (deltaInt <= -99.99)
+        //    {
+        //        delta_panel.BackColor = Color.Green;
+        //        Delta_value.Text = "-99.99";
+        //    }
+        //}
+
+        //private void CalculateFuelUsagePerLap(SdkWrapper.TelemetryUpdatedEventArgs e)
+        //{
+        //    //új kör esetén
+        //    if (lapCount - lapCountTemp == 1)
+        //    {
+        //        var actualFuelLevel = e.TelemetryInfo.FuelLevel.Value;
+
+        //        if (fuelLapStart != -1 && fuelLapStart - actualFuelLevel > 2)
+        //        {
+        //            if (true) //sessionType == "Race"
+        //            {
+        //                if (lapCount > 2) //lapCount >= raceStartLap
+        //                    fuelUsagePerLap.Add(fuelLapStart - actualFuelLevel);
+        //            }
+        //            else
+        //            {
+        //                fuelUsagePerLap.Add(fuelLapStart - actualFuelLevel);
+        //            }
 
 
 
-                }
+        //        }
 
-                #region fuelLapStart init
+        //        #region fuelLapStart init
 
-                if (fuelLapStart == -1)
-                {
-                    fuelLapStart = actualFuelLevel;
+        //        if (fuelLapStart == -1)
+        //        {
+        //            fuelLapStart = actualFuelLevel;
 
-                    fuelUsageLogger = new Logger(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\iRacingDash\\logs\\iRacingDash\\" + dateInString + "_W" + raceWeek + "_" + eventType + "_" + trackName + "\\fuelUsage.txt");
-                    fuelUsageLogger.Log("Init",
-                        "Lap number:  " + lapCount + Environment.NewLine + "  fuelLapStart: " + fuelLapStart);
-                    return;
-                }
+        //            fuelUsageLogger = new Logger(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\iRacingDash\\logs\\iRacingDash\\" + dateInString + "_W" + raceWeek + "_" + eventType + "_" + trackName + "\\fuelUsage.txt");
+        //            fuelUsageLogger.Log("Init",
+        //                "Lap number:  " + lapCount + Environment.NewLine + "  fuelLapStart: " + fuelLapStart);
+        //            return;
+        //        }
 
 
 
-                #endregion
+        //        #endregion
 
-                var lapStartEndFuelDifference = fuelLapStart - actualFuelLevel;
+        //        var lapStartEndFuelDifference = fuelLapStart - actualFuelLevel;
 
-                if (lapStartEndFuelDifference > 0)
-                {
-                    Last_lap_value.Text = string.Format("{0:0.00}", lapStartEndFuelDifference);
-                    Last_lap_value.ForeColor = Color.FromArgb(255, 128, 0);
-                }
-                else
-                {
-                    Last_lap_value.ForeColor = Color.Yellow;
-                }
-
-
-                fuelUsageLogger.Log("Difference", "Lap number: " + lapCount +
-                                                  Environment.NewLine + "  fuelLapStart: " + fuelLapStart +
-                                                  Environment.NewLine + "  actualFuelLevel: " + actualFuelLevel +
-                                                  Environment.NewLine + "  lapStartEndFuelDifference: " +
-                                                  lapStartEndFuelDifference +
-                                                  Environment.NewLine + "  fuelLapStart is set to actualFuelLevel" +
-                                                  Environment.NewLine + "FuelUsagePerLap: " + string.Join(",", fuelUsagePerLap));
-
-                fuelLapStart = actualFuelLevel;
-            }
-
-
-        }
-
-        private void UpdateLapTimeV2(SdkWrapper.TelemetryUpdatedEventArgs e)
-        {
-            var lapObject = wrapper.GetData("LapCurrentLapTime");
-            var lap = Convert.ToDouble(lapObject);
-
-            int min = (int)(lap / 60);
-            double sec = (lap % 60);
-
-
-            string laptime;
-
-            laptime = string.Format("{0:00}:{1:00.000}", min, sec);
-
-            //laptime = decimalPart > 0
-            //    ? string.Format("{0:00}:{1:00}.{2:000}", min, sec, decimalPart.ToString().Substring(2, decimalPartLength))
-            //    : laptime = string.Format("{0:00}:{1:00}.{2:000}", 0, 0, 0);
-
-            Laptime_value.Text = laptime;
-        }
-
-        private void UpdateRpmLights(SdkWrapper.TelemetryUpdatedEventArgs e)
-        {
-            var rpm = e.TelemetryInfo.RPM.Value;
-
-            var rpmPercent = rpm / (maxRpm / 100);
-
-            //ha zöld előtt járunk minden led off
-            if (rpmPercent < minRpmPercent)
-            {
-                //zöldek
-                led1_1.Visible = false;
-                led1_2.Visible = false;
-                led1_3.Visible = false;
-                led1_4.Visible = false;
-                led1_5.Visible = false;
-                led1_6.Visible = false;
-
-                //sárga
-                led2_1.Visible = false;
-                led2_2.Visible = false;
-                led2_3.Visible = false;
-
-                //piros
-                led3_1.Visible = false;
-                led3_2.Visible = false;
-                led3_3.Visible = false;
-            }
-
-            //ha a zöldben járunk
-            if (rpmPercent >= minRpmPercent && rpmPercent < minRpmPercent + shiftLight1Percent)
-            {
-                //alsó korlát
-                var rpmGreenBottom = maxRpm / 100 * minRpmPercent;
-                //felső korlát
-                var rpmGreenTop = maxRpm / 100 * (minRpmPercent + shiftLight1Percent);
-
-                //megmondom mennyi az rpm különbség amit 6 részre osztok
-                var diff = rpmGreenTop - rpmGreenBottom;
-
-                //felosztás
-                var oneSixth = diff / 6;
-
-                //
-                var percent1 = (rpmGreenBottom + oneSixth) / (maxRpm / 100);
-                var percent2 = (rpmGreenBottom + oneSixth * 2) / (maxRpm / 100);
-                var percent3 = (rpmGreenBottom + oneSixth * 3) / (maxRpm / 100);
-                var percent4 = (rpmGreenBottom + oneSixth * 4) / (maxRpm / 100);
-                var percent5 = (rpmGreenBottom + oneSixth * 5) / (maxRpm / 100);
-                var percent6 = (rpmGreenBottom + oneSixth * 6) / (maxRpm / 100);
-
-                //1
-                if (rpmPercent < percent1 && rpmPercent >= minRpmPercent)
-                {
-                    led1_1.Visible = true;
-                    led1_2.Visible = false;
-                    led1_3.Visible = false;
-                    led1_4.Visible = false;
-                    led1_5.Visible = false;
-                    led1_6.Visible = false;
-                }
-                else if (rpmPercent > percent1 && rpmPercent < percent2)
-                {
-                    // 2
-                    led1_1.Visible = true;
-                    led1_2.Visible = true;
-                    led1_3.Visible = false;
-                    led1_4.Visible = false;
-                    led1_5.Visible = false;
-                    led1_6.Visible = false;
-                }
-                else if (rpmPercent > percent2 && rpmPercent < percent3)
-                {
-                    // 3
-                    led1_1.Visible = true;
-                    led1_2.Visible = true;
-                    led1_3.Visible = true;
-                    led1_4.Visible = false;
-                    led1_5.Visible = false;
-                    led1_6.Visible = false;
-                }
-                else if (rpmPercent > percent3 && rpmPercent < percent4)
-                {
-                    // 4   
-                    led1_1.Visible = true;
-                    led1_2.Visible = true;
-                    led1_3.Visible = true;
-                    led1_4.Visible = true;
-                    led1_5.Visible = false;
-                    led1_6.Visible = false;
-                }
-                else if (rpmPercent > percent4 && rpmPercent < percent5)
-                {
-                    // 5
-                    led1_1.Visible = true;
-                    led1_2.Visible = true;
-                    led1_3.Visible = true;
-                    led1_4.Visible = true;
-                    led1_5.Visible = true;
-                    led1_6.Visible = false;
-                }
-                else if (rpmPercent > percent5 && rpmPercent < minRpmPercent + shiftLight1Percent)
-                {
-                    // 6
-                    led1_1.Visible = true;
-                    led1_2.Visible = true;
-                    led1_3.Visible = true;
-                    led1_4.Visible = true;
-                    led1_5.Visible = true;
-                    led1_6.Visible = true;
-                }
-
-                led2_1.Visible = false;
-                led2_2.Visible = false;
-                led2_3.Visible = false;
-
-                led3_1.Visible = false;
-                led3_2.Visible = false;
-                led3_3.Visible = false;
-
-
-                //gear changes to white
-                gear.ForeColor = Color.Black;
-
-                gear_panel.BackColor = Color.Gold;
-                gear.ForeColor = Color.Black;
-            }
-
-
-            if (rpmPercent > minRpmPercent + shiftLight1Percent &&
-                rpmPercent <= minRpmPercent + shiftLight1Percent + shiftLight2Percent)
-            {
-                //ha a sárgában vagyunk
-
-                //alapból az összest kivilágitjuk a zöldekből
-                led1_1.Visible = true;
-                led1_2.Visible = true;
-                led1_3.Visible = true;
-                led1_4.Visible = true;
-                led1_5.Visible = true;
-                led1_6.Visible = true;
-
-
-                //alsó korlát
-                var rpmYellowBottom = maxRpm / 100 * (minRpmPercent + shiftLight1Percent);
-                //felső korlát
-                var rpmYellowTop = maxRpm / 100 * (minRpmPercent + shiftLight1Percent + shiftLight2Percent);
-
-                //megmondom mennyi az rpm különbség amit 3 részre osztok
-                var diff = rpmYellowTop - rpmYellowBottom;
-
-                //felosztás
-                var oneThird = diff / 3;
-
-                var percent1 = (rpmYellowBottom + oneThird) / (maxRpm / 100);
-                var percent2 = (rpmYellowBottom + oneThird * 2) / (maxRpm / 100);
-                var percent3 = (rpmYellowBottom + oneThird * 3) / (maxRpm / 100);
-
-
-                if (rpmPercent > minRpmPercent + shiftLight1Percent && rpmPercent < percent1)
-                {
-                    //1
-                    led2_1.Visible = true;
-                    led2_2.Visible = false;
-                    led2_3.Visible = false;
-                }
-                else if (rpmPercent > percent1 && rpmPercent < percent2)
-                {
-                    // 2
-                    led2_1.Visible = true;
-                    led2_2.Visible = true;
-                    led2_3.Visible = false;
-                }
-                else if (rpmPercent > percent2 && rpmPercent < percent3)
-                {
-                    // 3
-                    led2_1.Visible = true;
-                    led2_2.Visible = true;
-                    led2_3.Visible = true;
-                }
-
-                led3_1.Visible = false;
-                led3_2.Visible = false;
-                led3_3.Visible = false;
-
-                //gear changes to white
-                gear.ForeColor = Color.White;
-
-                gear_panel.BackColor = Color.Gold;
-                gear.ForeColor = Color.Black;
-            }
-
-
-            if (rpmPercent > redLinePercent)
-            {
-                //ha a pirosban vagyunk
-
-                //alapból az összest kivilágitjuk zöldből és sárgából
-                led1_1.Visible = true;
-                led1_2.Visible = true;
-                led1_3.Visible = true;
-                led1_4.Visible = true;
-                led1_5.Visible = true;
-                led1_6.Visible = true;
-                led2_1.Visible = true;
-                led2_2.Visible = true;
-                led2_3.Visible = true;
-
-                //alsó korlát
-                var rpmRedBottom = maxRpm / 100 * (minRpmPercent + shiftLight1Percent + shiftLight2Percent);
-                //felső korlát
-                var rpmRedTop = maxRpm;
-
-                //megmondom mennyi az rpm különbség amit 3 részre osztok
-                var diff = rpmRedTop - rpmRedBottom;
-
-                //felosztás
-                var oneThird = diff / 3;
-
-                var percent1 = (rpmRedBottom + oneThird) / (maxRpm / 100);
-                var percent2 = (rpmRedBottom + oneThird * 2) / (maxRpm / 100);
-                var percent3 = (rpmRedBottom + oneThird * 3) / (maxRpm / 100);
-
-                if (rpmPercent > minRpmPercent + shiftLight1Percent + shiftLight2Percent && rpmPercent < percent1)
-                {
-                    //1
-                    led3_1.Visible = true;
-                    led3_2.Visible = false;
-                    led3_3.Visible = false;
-                }
-                else if (rpmPercent > percent1 && rpmPercent < percent2)
-                {
-                    // 2
-                    led3_1.Visible = true;
-                    led3_2.Visible = true;
-                    led3_3.Visible = false;
-                }
-                else if (rpmPercent > percent2 && rpmPercent < percent3)
-                {
-                    // 3
-                    led3_1.Visible = true;
-                    led3_2.Visible = true;
-                    led3_3.Visible = true;
-                }
-
-                //gear changes to red
-                gear.ForeColor = Color.Red;
-                gear_panel.BackColor = Color.Orange;
-            }
-
-            if (rpmPercent > redLinePercent)
-            {
-                //ha már villogni kell
-                //TODO
-
-                gear_panel.BackColor = Color.Red;
-                gear.ForeColor = Color.White;
-            }
-        }
+        //        if (lapStartEndFuelDifference > 0)
+        //        {
+        //            Last_lap_value.Text = string.Format("{0:0.00}", lapStartEndFuelDifference);
+        //            Last_lap_value.ForeColor = Color.FromArgb(255, 128, 0);
+        //        }
+        //        else
+        //        {
+        //            Last_lap_value.ForeColor = Color.Yellow;
+        //        }
+
+
+        //        fuelUsageLogger.Log("Difference", "Lap number: " + lapCount +
+        //                                          Environment.NewLine + "  fuelLapStart: " + fuelLapStart +
+        //                                          Environment.NewLine + "  actualFuelLevel: " + actualFuelLevel +
+        //                                          Environment.NewLine + "  lapStartEndFuelDifference: " +
+        //                                          lapStartEndFuelDifference +
+        //                                          Environment.NewLine + "  fuelLapStart is set to actualFuelLevel" +
+        //                                          Environment.NewLine + "FuelUsagePerLap: " + string.Join(",", fuelUsagePerLap));
+
+        //        fuelLapStart = actualFuelLevel;
+        //    }
+
+
+        //}
 
         private void OnSessionInfoUpdated(object sender, SdkWrapper.SessionInfoUpdatedEventArgs e)
         {
-            try
-            {
-                subSessionNumber = Int32.Parse(e.SessionInfo["WeekendInfo"]["SubSessionID"].Value);
-
-                #region Init subSessionNumberTemp
-
-                if (subSessionNumberTemp == -1)
-                    subSessionNumberTemp = subSessionNumber;
-
-                #endregion
-
-                if (sessionNumber != sessionNumberTemp || subSessionNumber != subSessionNumberTemp)
-                {
-                    #region Resetting variables
-
-                    maxFuelOfCar = -9999;
-                    trackLength = 0;
-                    subSessionNumberTemp = subSessionNumber;
-
-                    lapCount = 0;
-                    lapCountTemp = -1;
-                    lapCountPrevious = 0;
-
-                    fuelLapStart = -1;
-                    fuelUsagePerLap.Clear();
-                    DriverCarIdx = -9999;
-                    remainingTime = 0;
-                    fuelLevel = 0;
-                    trackLength = -9999;
-
-                    Fuel_to_fill_value.Text = "N/A";
-                    Fuel_remain_value.Text = "N/A";
-                    Laps_estimate_value.Text = "N/A";
-                    Brake_bias_value.Text = "N/A";
-                    Speed_value.Text = "N/A";
-                    Delta_value.Text = "N/A";
-                    //traction1_value.Text = "N/A";
-                    boost_value.Text = "N/A";
-                    Laptime_value.Text = "00:00.000";
-                    rpm.Text = "N/A";
-                    gear.Text = "N";
-                    Last_lap_value.Text = "N/A";
-                    initForFuel = true;
-
-                    //newLapLogger.Log("Resetting variables", Environment.NewLine + "OnSessionUpdated");
-
-                    #endregion
-                }
-                else
-                {
-                    maxFuelOfCar = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarFuelMaxLtr"].Value);
-                    trackLength = float.Parse(e.SessionInfo["WeekendInfo"]["TrackLength"].Value.Substring(0, 4)) * 1000;
-
-                    var isMaxRpmValid = float.TryParse(e.SessionInfo["DriverInfo"]["DriverCarRedLine"].Value,
-                        out maxRpm);
-
-                    if (isMaxRpmValid)
-                        maxRpm = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarRedLine"].Value);
-
-                    sessionType = e.SessionInfo["SessionInfo"]["Sessions"]["SessionNum", sessionNumber]["SessionType"].Value;
-                    raceWeek = e.SessionInfo["WeekendInfo"]["RaceWeek"].Value;
-                    eventType = e.SessionInfo["WeekendInfo"]["EventType"].Value;
-                    eventType = eventType.Replace(' ', '_');
-                    trackName = e.SessionInfo["WeekendInfo"]["TrackName"].Value;
-                    trackName = trackName.Replace(' ', '_');
-                }
-            }
-            catch (Exception ex)
-            {
-                if (errorLogger == null)
-                    errorLogger = new Logger(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\iRacingDash\\logs\\iRacingDash\\" + dateInString + "_W" + raceWeek + "_" + eventType + "_" + trackName + "\\errorLog.txt");
-                errorLogger.Log("OnSessionInfoUpdated Error", ex.Message);
-            }
+            sessionType = e.SessionInfo["SessionInfo"]["Sessions"]["SessionNum", sessionNumber]["SessionType"].Value;
         }
 
-        private void CalculateFuel(SdkWrapper.TelemetryUpdatedEventArgs e)
-        {
-            #region Gathering required variables to calculate fuel
-            //FOR FUEL TO FINISH - OVERWRITE REMAININGTIME FOR TIMERTIME
-            if (timerTime != -1 && raceOver)
-                remainingTime = timerTime;
+        //private void OnSessionInfoUpdated(object sender, SdkWrapper.SessionInfoUpdatedEventArgs e)
+        //{
+        //    try
+        //    {
+        //        subSessionNumber = Int32.Parse(e.SessionInfo["WeekendInfo"]["SubSessionID"].Value);
 
-            //required vars
-            //remaining time, avg fuel usage, avg laptime
-            var avgFuelUsage = GetAverageFromList(fuelUsagePerLap);
-            var avgLapTime = GetAverageFromList(laptimes);
+        //        #region Init subSessionNumberTemp
 
-            #endregion
+        //        if (subSessionNumberTemp == -1)
+        //            subSessionNumberTemp = subSessionNumber;
 
-            #region Calculate estimate laps
+        //        #endregion
 
-            var remainingLapsWithFuel = fuelLevel / avgFuelUsage;
-            if (HasValue(remainingLapsWithFuel))
-                Laps_estimate_value.Text = string.Format("{0:0.00}", remainingLapsWithFuel);
+        //        if (sessionNumber != sessionNumberTemp || subSessionNumber != subSessionNumberTemp)
+        //        {
+        //            #region Resetting variables
 
-            #endregion
+        //            maxFuelOfCar = -9999;
+        //            trackLength = 0;
+        //            subSessionNumberTemp = subSessionNumber;
 
-            #region Calculate fuel to fill
+        //            lapCount = 0;
+        //            lapCountTemp = -1;
+        //            lapCountPrevious = 0;
 
-            var timeWithoutFuel = remainingTime - (avgLapTime * remainingLapsWithFuel);
+        //            fuelLapStart = -1;
+        //            fuelUsagePerLap.Clear();
+        //            DriverCarIdx = -9999;
+        //            remainingTime = 0;
+        //            fuelLevel = 0;
+        //            trackLength = -9999;
 
-            if (timeWithoutFuel > 0)
-            {
-                var minimumLapsToFill = Math.Floor(timeWithoutFuel / avgLapTime);
-                var leftOverSeconds = timeWithoutFuel % avgLapTime;
+        //            Fuel_to_fill_value.Text = "N/A";
+        //            Fuel_remain_value.Text = "N/A";
+        //            Laps_estimate_value.Text = "N/A";
+        //            Brake_bias_value.Text = "N/A";
+        //            Speed_value.Text = "N/A";
+        //            Delta_value.Text = "N/A";
+        //            //traction1_value.Text = "N/A";
+        //            boost_value.Text = "N/A";
+        //            Laptime_value.Text = "00:00.000";
+        //            rpm.Text = "N/A";
+        //            gear.Text = "N";
+        //            Last_lap_value.Text = "N/A";
+        //            initForFuel = true;
 
-                //calculate fuel for leftover seconds
-                var fillForLeftover = (leftOverSeconds / (avgLapTime / 100)) * (avgFuelUsage / 100);
+        //            //newLapLogger.Log("Resetting variables", Environment.NewLine + "OnSessionUpdated");
 
-                if (HasValue(minimumLapsToFill) && HasValue(fillForLeftover))
-                {
-                    var toFill = (minimumLapsToFill * avgFuelUsage) + fillForLeftover + Math.Ceiling(avgFuelUsage) +
-                                 1; //+1 liter for safety
+        //            #endregion
+        //        }
+        //        else
+        //        {
+        //            maxFuelOfCar = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarFuelMaxLtr"].Value);
+        //            trackLength = float.Parse(e.SessionInfo["WeekendInfo"]["TrackLength"].Value.Substring(0, 4)) * 1000;
 
-                    Fuel_to_fill_value.Text = toFill > maxFuelOfCar
-                        ? string.Format("{0:0.00}", maxFuelOfCar)
-                        : string.Format("{0:0.00}", toFill);
-                }
-            }
-            else
-            {
-                Fuel_to_fill_value.Text = "CHCK";
-            }
+        //            var isMaxRpmValid = float.TryParse(e.SessionInfo["DriverInfo"]["DriverCarRedLine"].Value,
+        //                out maxRpm);
 
-            if (!HasValue(timeWithoutFuel))
-                Fuel_to_fill_value.Text = "N/A";
+        //            if (isMaxRpmValid)
+        //                maxRpm = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarRedLine"].Value);
 
-            #endregion
+        //            sessionType = e.SessionInfo["SessionInfo"]["Sessions"]["SessionNum", sessionNumber]["SessionType"].Value;
+        //            raceWeek = e.SessionInfo["WeekendInfo"]["RaceWeek"].Value;
+        //            eventType = e.SessionInfo["WeekendInfo"]["EventType"].Value;
+        //            eventType = eventType.Replace(' ', '_');
+        //            trackName = e.SessionInfo["WeekendInfo"]["TrackName"].Value;
+        //            trackName = trackName.Replace(' ', '_');
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        if (errorLogger == null)
+        //            errorLogger = new Logger(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\iRacingDash\\logs\\iRacingDash\\" + dateInString + "_W" + raceWeek + "_" + eventType + "_" + trackName + "\\errorLog.txt");
+        //        errorLogger.Log("OnSessionInfoUpdated Error", ex.Message);
+        //    }
+        //}
 
-            #region Calculate if fuel is enough/not to finish line respectively
-            //if (remainingTimeTemp > 1 && raceOver && !remainingTimeIsSet)
-            //{
-            //    remainingTime = avgLapTime;
-            //    remainingTimeIsSet = true;
-            //}
+        //private void CalculateFuel(SdkWrapper.TelemetryUpdatedEventArgs e)
+        //{
+        //    #region Gathering required variables to calculate fuel
+        //    //FOR FUEL TO FINISH - OVERWRITE REMAININGTIME FOR TIMERTIME
+        //    if (timerTime != -1 && raceOver)
+        //        remainingTime = timerTime;
 
-            if (timerTime != -1)
-            {
-                CalculateFuelTillFinishLine(timerTime, avgFuelUsage, avgLapTime, timeWithoutFuel,
-                    remainingLapsWithFuel);
-            }
-            else
-            {
-                CalculateFuelTillFinishLine(remainingTime, avgFuelUsage, avgLapTime, timeWithoutFuel,
-                    remainingLapsWithFuel);
-            }
+        //    //required vars
+        //    //remaining time, avg fuel usage, avg laptime
+        //    var avgFuelUsage = GetAverageFromList(fuelUsagePerLap);
+        //    var avgLapTime = GetAverageFromList(laptimes);
+
+        //    #endregion
+
+        //    #region Calculate estimate laps
+
+        //    var remainingLapsWithFuel = fuelLevel / avgFuelUsage;
+        //    if (HasValue(remainingLapsWithFuel))
+        //        Laps_estimate_value.Text = string.Format("{0:0.00}", remainingLapsWithFuel);
+
+        //    #endregion
+
+        //    #region Calculate fuel to fill
+
+        //    var timeWithoutFuel = remainingTime - (avgLapTime * remainingLapsWithFuel);
+
+        //    if (timeWithoutFuel > 0)
+        //    {
+        //        var minimumLapsToFill = Math.Floor(timeWithoutFuel / avgLapTime);
+        //        var leftOverSeconds = timeWithoutFuel % avgLapTime;
+
+        //        //calculate fuel for leftover seconds
+        //        var fillForLeftover = (leftOverSeconds / (avgLapTime / 100)) * (avgFuelUsage / 100);
+
+        //        if (HasValue(minimumLapsToFill) && HasValue(fillForLeftover))
+        //        {
+        //            var toFill = (minimumLapsToFill * avgFuelUsage) + fillForLeftover + Math.Ceiling(avgFuelUsage) +
+        //                         1; //+1 liter for safety
+
+        //            Fuel_to_fill_value.Text = toFill > maxFuelOfCar
+        //                ? string.Format("{0:0.00}", maxFuelOfCar)
+        //                : string.Format("{0:0.00}", toFill);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        Fuel_to_fill_value.Text = "CHCK";
+        //    }
+
+        //    if (!HasValue(timeWithoutFuel))
+        //        Fuel_to_fill_value.Text = "N/A";
+
+        //    #endregion
+
+        //    #region Calculate if fuel is enough/not to finish line respectively
+        //    //if (remainingTimeTemp > 1 && raceOver && !remainingTimeIsSet)
+        //    //{
+        //    //    remainingTime = avgLapTime;
+        //    //    remainingTimeIsSet = true;
+        //    //}
+
+        //    if (timerTime != -1)
+        //    {
+        //        CalculateFuelTillFinishLine(timerTime, avgFuelUsage, avgLapTime, timeWithoutFuel,
+        //            remainingLapsWithFuel);
+        //    }
+        //    else
+        //    {
+        //        CalculateFuelTillFinishLine(remainingTime, avgFuelUsage, avgLapTime, timeWithoutFuel,
+        //            remainingLapsWithFuel);
+        //    }
 
 
-            //átlagos eset, ha az óra lejárt VISZONT kezdéskor is végig -1 ezért azt is kezelni kell
-            if (lapCount > 2)
-            {
-                if (remainingTime != -1)
-                {
-                    remainingTimeTemp = remainingTime;
-                }
-                else
-                {
-                    raceOver = true;
-                    timerTime = (int)avgLapTime;
-                    remainingTime = avgLapTime;
-                    //start custom timer
-                    timer1 = new System.Timers.Timer();
-                    timer1.Elapsed += new ElapsedEventHandler(timer1_Tick);
-                    timer1.Interval = 1000; // 1 second
-                    timer1.Start();
+        //    //átlagos eset, ha az óra lejárt VISZONT kezdéskor is végig -1 ezért azt is kezelni kell
+        //    if (lapCount > 2)
+        //    {
+        //        if (remainingTime != -1)
+        //        {
+        //            remainingTimeTemp = remainingTime;
+        //        }
+        //        else
+        //        {
+        //            raceOver = true;
+        //            timerTime = (int)avgLapTime;
+        //            remainingTime = avgLapTime;
+        //            //start custom timer
+        //            timer1 = new System.Timers.Timer();
+        //            timer1.Elapsed += new ElapsedEventHandler(timer1_Tick);
+        //            timer1.Interval = 1000; // 1 second
+        //            timer1.Start();
 
-                }
-            }
+        //        }
+        //    }
 
 
-            #endregion
-        }
+        //    #endregion
+        //}
 
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            timerTime--;
-            remainingTime = timerTime;
-            if (timerTime == 0)
-                timer1.Stop();
-        }
+        //private void timer1_Tick(object sender, EventArgs e)
+        //{
+        //    timerTime--;
+        //    remainingTime = timerTime;
+        //    if (timerTime == 0)
+        //        timer1.Stop();
+        //}
 
-        private void CalculateFuelTillFinishLine(double remainingTime, double avgFuelUsage, double avgLapTime, double timeWithoutFuel, double remainingLapsWithFuel)
-        {
+        //private void CalculateFuelTillFinishLine(double remainingTime, double avgFuelUsage, double avgLapTime, double timeWithoutFuel, double remainingLapsWithFuel)
+        //{
 
-            var avgFuelUsageInASecond = avgFuelUsage / avgLapTime;
-            var litersPlusOrMinus = avgFuelUsageInASecond * timeWithoutFuel;
-            var toFinishLine = (remainingTime + avgLapTime) * avgFuelUsageInASecond;
+        //    var avgFuelUsageInASecond = avgFuelUsage / avgLapTime;
+        //    var litersPlusOrMinus = avgFuelUsageInASecond * timeWithoutFuel;
+        //    var toFinishLine = (remainingTime + avgLapTime) * avgFuelUsageInASecond;
 
-            //és a jelenlegi benzinből mennyi jön még ki a diff-re kalkulálva
-            var allSecondsTillTankIsEmpty = (remainingLapsWithFuel * avgLapTime) * avgFuelUsageInASecond;
+        //    //és a jelenlegi benzinből mennyi jön még ki a diff-re kalkulálva
+        //    var allSecondsTillTankIsEmpty = (remainingLapsWithFuel * avgLapTime) * avgFuelUsageInASecond;
 
-            var diff = allSecondsTillTankIsEmpty - toFinishLine;
+        //    var diff = allSecondsTillTankIsEmpty - toFinishLine;
 
-            if (diff >= 0)
-            {
-                fuel_to_finish_value.Text = string.Format("{0:+0.00}", diff);
-                fuel_to_finish_value.ForeColor = Color.White;
-                panel10.BackColor = Color.LimeGreen;
-            }
-            else if (diff < 0)
-            {
-                fuel_to_finish_value.Text = string.Format("{0:0.00}", diff);
-                fuel_to_finish_value.ForeColor = Color.White;
-                panel10.BackColor = Color.Firebrick;
-            }
-        }
+        //    if (diff >= 0)
+        //    {
+        //        fuel_to_finish_value.Text = string.Format("{0:+0.00}", diff);
+        //        fuel_to_finish_value.ForeColor = Color.White;
+        //        panel10.BackColor = Color.LimeGreen;
+        //    }
+        //    else if (diff < 0)
+        //    {
+        //        fuel_to_finish_value.Text = string.Format("{0:0.00}", diff);
+        //        fuel_to_finish_value.ForeColor = Color.White;
+        //        panel10.BackColor = Color.Firebrick;
+        //    }
+        //}
 
-        // Or IsNanOrInfinity
-        public bool HasValue(double value)
-        {
-            return !Double.IsNaN(value) && !Double.IsInfinity(value);
-        }
+        //// Or IsNanOrInfinity
+        //public bool HasValue(double value)
+        //{
+        //    return !Double.IsNaN(value) && !Double.IsInfinity(value);
+        //}
 
-        private double GetAverageFromList(List<double> list)
-        {
-            var max = 0.0d;
-            foreach (var value in list)
-            {
-                max += value;
-            }
-            return max / list.Count;
-        }
+        //private double GetAverageFromList(List<double> list)
+        //{
+        //    var max = 0.0d;
+        //    foreach (var value in list)
+        //    {
+        //        max += value;
+        //    }
+        //    return max / list.Count;
+        //}
 
         #region FORM BETÖLTÉS
 
@@ -1410,24 +632,24 @@ namespace iRacingDash
 
         #endregion
 
-        protected void Idle_MouseDown(object sender, MouseEventArgs e)
+        public void Idle_MouseDown(object sender, MouseEventArgs e)
         {
             if (!clicked)
                 clicked = true;
         }
 
-        protected void Idle_MouseUp(object sender, MouseEventArgs e)
+        public void Idle_MouseUp(object sender, MouseEventArgs e)
         {
             if (clicked)
                 clicked = false;
         }
-        protected void Idle_MouseMove(object sender, MouseEventArgs e)
+        public void Idle_MouseMove(object sender, MouseEventArgs e)
         {
             if (clicked)
                 this.Location = new Point(Location.X + e.X, Location.Y + e.Y);
         }
 
-        protected void Idle_DoubleClick(object sender, EventArgs e)
+        public void Idle_DoubleClick(object sender, EventArgs e)
         {
             Environment.Exit(0);
         }
