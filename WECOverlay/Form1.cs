@@ -18,10 +18,11 @@ namespace WECOverlay
         private SdkWrapper wrapper;
 
         private static DateTime now = DateTime.Now;
-        Turn turn = new Turn();
+        private Turn turn;
         private static Configurator s = new Configurator();
+        
 
-        public static string logPath = s.Configurate<string>("log", "config", "Path");
+        //public static string logPath = s.Configurate<string>("log", "config", "Path");
         public static string trackPath = s.Configurate<string>("tracks", "config", "Path");
         public static string dateInString = now.ToString().Replace(' ', '-').Replace('/', '-').Replace(':', '-');
         private Logger errorLogger;
@@ -42,8 +43,7 @@ namespace WECOverlay
 
         //Configs
         private bool RecceMode = s.Configurate<bool>("RecceMode", "config", "RecceMode");
-
-        private string classImagesPath = s.Configurate<string>("classImages", "config", "Path");
+        private bool turnFormEnabled = s.Configurate<bool>("turns", "config", "enabled");
         private bool classImageSet = false;
 
         //Session
@@ -70,13 +70,18 @@ namespace WECOverlay
         private float actual_rpm;
         private float maxRpm = 7300;
 
+
         public Form1()
         {
             InitializeComponent();
 
             Init();
 
-            turn.Visible = true;
+            if (turnFormEnabled)
+            {
+                turn = new Turn();
+                turn.Visible = turnFormEnabled;
+            }
 
             wrapper = new SdkWrapper();
             wrapper.Start();
@@ -164,7 +169,7 @@ namespace WECOverlay
             {
                 turn.label1.Font = new Font("Rawhide Raw 2016", 15, FontStyle.Regular);
                 turn.label2.Font = new Font("Rawhide Raw 2016", 20, FontStyle.Regular);
-                turn.label1.Text = "Distance";
+                turn.label1.Text = trackId+" Distance";
                 turn.label2.Text = Convert.ToInt32(distance) + " m";
             }
         }
@@ -215,7 +220,7 @@ namespace WECOverlay
                 //kell az új session resetje
                 if (!trackSet && trackId != trackIdTemp && trackId > 0)
                 {
-                    Turns = new CSVParser().Parse(trackPath, trackId);  
+                    Turns = new CSVParser().Parse(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\iRacingDash\\tracks\\tracksList.csv", trackId);  
                     trackSet = true;
                     trackIdTemp = trackId;
                 }
@@ -240,42 +245,38 @@ namespace WECOverlay
                 //Pedálok két képe mozgatása
                 Pedals(e);
 
+
                 //A Class szinezéshez állítgatom
                 sessionChanged = false;
             }
             catch (Exception ex)
             {
                 if (errorLogger == null)
-                    errorLogger = new Logger(logPath + "\\" + dateInString + "\\errorLog.txt");
-
+                    errorLogger = new Logger(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\iRacingDash\\logs\\iWECOverlay\\" + dateInString + "\\errorLog.txt");
                 errorLogger.Log("OnSessionTelemetryUpdated Error", ex.Message);
             }
         }
 
         private void SetClassColor(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
-            if (classImagesPath.Length != 0)
-            {
                 switch (carClassColor)
                 {
                     case "0xffda59":
-                        class_picture.Image = Image.FromFile(classImagesPath + "\\class_ffda59.png");
+                        class_picture.Image = WECOverlay.Properties.Resources.class_ffda59;
                         classImageSet = true;
                         break;
                     case "0x33ceff":
-                        class_picture.Image = Image.FromFile(classImagesPath + "\\class_33ceff.png");
-                        classImageSet = true;
+                        class_picture.Image = WECOverlay.Properties.Resources.class_33ceff;
+                    classImageSet = true;
                         break;
                     case "0xff5888":
-                        class_picture.Image = Image.FromFile(classImagesPath + "\\class_ff5888.png");
-                        classImageSet = true;
+                        class_picture.Image = WECOverlay.Properties.Resources.class_ff5888;
+                    classImageSet = true;
                         break;
                     default:
-                        class_picture.Image = Image.FromFile(classImagesPath + "\\class_default.png");
-                        break;
+                        class_picture.Image = WECOverlay.Properties.Resources.class_default;
+                    break;
                 }
-            }
-
         }
 
         private void Pedals(SdkWrapper.TelemetryUpdatedEventArgs e)
@@ -360,7 +361,7 @@ namespace WECOverlay
             catch (Exception ex)
             {
                 if (errorLogger == null)
-                    errorLogger = new Logger(logPath + "\\" + dateInString + "\\errorLog.txt");
+                    errorLogger = new Logger(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\iRacingDash\\logs\\iWECOverlay\\" + dateInString + "\\errorLog.txt");
 
                 errorLogger.Log("OnSessionInfoUpdated Error", ex.Message);
             }

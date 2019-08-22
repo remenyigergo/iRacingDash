@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using iRacingDash;
+using iRacingSdkWrapper.Bitfields;
 
 namespace RemainingTime
 {
@@ -43,7 +44,7 @@ namespace RemainingTime
                 if (hours < 0 || minutes < 0 || second < 0)
                 {
                     time = string.Format("-{0:00}:{1:00}:{2:00}", Math.Abs(hours), Math.Abs(minutes),
-                        Math.Abs(second));
+                        Math.Abs(second)); 
                 }
                 else
                 {
@@ -53,12 +54,41 @@ namespace RemainingTime
                 label1.Text = time;
                 air_temp_value.Text = string.Format("{0:0.0}", e.TelemetryInfo.AirTemp.Value);
                 track_tamp_value.Text = string.Format("{0:0.0}", e.TelemetryInfo.TrackTemp.Value);
+
+                CheckFlag(e);
             }
             catch (Exception ex)
             {
                 label1.Text = "00:00:00";
-                Logger errorLogger = new Logger(iRacingDash.Form1.logPath +"\\"+ iRacingDash.Form1.dateInString + "\\errorLog.txt");
-                errorLogger.Log("Common Time Error", ex.Message);
+                Logger errorLogger = new Logger(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\iRacingDash\\logs\\iRacingDash\\" + iRacingDash.Form1.dateInString + "\\errorLog.txt");
+                errorLogger.Log("Common RemainingTime Error", ex.Message);
+            }
+        }
+
+        private void CheckFlag(SdkWrapper.TelemetryUpdatedEventArgs e)
+        {
+            var sessionFlag = e.TelemetryInfo.SessionFlags.Value.ToString();
+
+
+            var sessionFlags = (SessionFlags)Enum.Parse(typeof(SessionFlags), sessionFlag.Replace('|', ','));
+
+            switch (sessionFlags)
+            {
+                case var t when t.HasFlag(SessionFlags.Yellow):
+                case var t1 when t1.HasFlag(SessionFlags.Caution):
+                case var t2 when t2.HasFlag(SessionFlags.CautionWaving):
+                case var t3 when t3.HasFlag(SessionFlags.YellowWaving):
+                    yellow_flag.Visible = true;
+                    break;
+                case var t4 when t4.HasFlag(SessionFlags.Checkered):
+                    label1.Text = "CHECKERED";
+                    goto default;
+                case var t5 when t5.HasFlag(SessionFlags.White):
+                    label1.Text = "FINAL LAP";
+                    goto default;
+                default:
+                    yellow_flag.Visible = false;
+                    break;
             }
         }
 
