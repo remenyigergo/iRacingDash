@@ -12,7 +12,7 @@ namespace iRacingDash.Sessions
 {
     public class OfflineTestingSession : Session
     {
-        public OfflineTestingSession(int nonRtFps, Form1 form, SdkWrapper wrapper, Dash dash) : base(nonRtFps, form, wrapper, dash)
+        public OfflineTestingSession(int nonRtFps, Form1 form, SdkWrapper sessionWrapper, Dash sessionDash) : base(nonRtFps, form, sessionWrapper, sessionDash)
         {
         }
 
@@ -27,49 +27,49 @@ namespace iRacingDash.Sessions
                 //Folyamatosan frissülő adatok
                 sessionNumber = e.TelemetryInfo.SessionNum.Value;
 
-                dashForm.Speed_value.Text = Math.Round(e.TelemetryInfo.Speed.Value * 3.6).ToString();
+                sessionForm.Speed_value.Text = Math.Round(e.TelemetryInfo.Speed.Value * 3.6).ToString();
 
                 //újraszámoljuk a szükséges adatokat
-                _dash.UpdateRpmLights(e);
-                _dash.CarLeftRight(e);
-                _dash.UpdateLapTimeV2(e);
-                _dash.CalculateDeltaV2(e);
+                sessionDash.UpdateRpmLights(e);
+                sessionDash.CarLeftRight(e);
+                sessionDash.UpdateLapTimeV2(e);
+                sessionDash.CalculateDeltaV2(e);
 
-                if (fpsCounter == (int)(_wrapper.TelemetryUpdateFrequency / NonRTCalculationFPS))
+                if (fpsCounter == (int)(sessionWrapper.TelemetryUpdateFrequency / NonRTCalculationFPS))
                     NonRealtimeCalculations(e);
 
-                if (flashingFpsCounter == (int)(_wrapper.TelemetryUpdateFrequency / flashingFps))
+                if (flashingFpsCounter == (int)(sessionWrapper.TelemetryUpdateFrequency / flashingFps))
                     WarningFlashes(e);
 
                 #region Set boost (if exist)
-                if (_wrapper.GetData("dcBoostLevel") != null)
+                if (sessionWrapper.GetData("dcBoostLevel") != null)
                 {
-                    boost = Int32.Parse(_wrapper.GetData("dcBoostLevel").ToString());
-                    dashForm.boost_value.Text = boost.ToString();
+                    boost = Int32.Parse(sessionWrapper.GetData("dcBoostLevel").ToString());
+                    sessionForm.boost_value.Text = boost.ToString();
                 }
                 #endregion
 
                 #region Set TC1 TC2
-                if (_wrapper.GetData("dcTractionControl") != null)
-                    tractionControl1 = Int32.Parse(_wrapper.GetData("dcTractionControl").ToString());
+                if (sessionWrapper.GetData("dcTractionControl") != null)
+                    tractionControl1 = Int32.Parse(sessionWrapper.GetData("dcTractionControl").ToString());
 
-                if (_wrapper.GetData("dcTractionControl2") != null)
-                    tractionControl2 = Int32.Parse(_wrapper.GetData("dcTractionControl2").ToString());
+                if (sessionWrapper.GetData("dcTractionControl2") != null)
+                    tractionControl2 = Int32.Parse(sessionWrapper.GetData("dcTractionControl2").ToString());
                 #endregion
 
                 #region Set Brake bias
-                if (_wrapper.GetData("dcBrakeBias") != null)
+                if (sessionWrapper.GetData("dcBrakeBias") != null)
                 {
-                    dashForm.Brake_bias_value.Text = string.Format("{0:00.00}", Convert.ToDouble(_wrapper.GetData("dcBrakeBias").ToString()));
-                    brakeBias = float.Parse(_wrapper.GetData("dcBrakeBias").ToString());
+                    sessionForm.Brake_bias_value.Text = string.Format("{0:00.00}", Convert.ToDouble(sessionWrapper.GetData("dcBrakeBias").ToString()));
+                    brakeBias = float.Parse(sessionWrapper.GetData("dcBrakeBias").ToString());
                 }
                 #endregion
 
                 #region Set Engine Map
-                if (_wrapper.GetData("dcThrottleShape") != null)
+                if (sessionWrapper.GetData("dcThrottleShape") != null)
                 {
-                    engineMap = Int32.Parse(_wrapper.GetData("dcThrottleShape").ToString());
-                    dashForm.boost_value.Text = engineMap.ToString();
+                    engineMap = Int32.Parse(sessionWrapper.GetData("dcThrottleShape").ToString());
+                    sessionForm.boost_value.Text = engineMap.ToString();
                 }
                 #endregion
 
@@ -101,7 +101,7 @@ namespace iRacingDash.Sessions
 
                 lapCountTemp = e.TelemetryInfo.Lap.Value;
 
-                dashForm.rpm.Text = Math.Round(e.TelemetryInfo.RPM.Value).ToString();
+                sessionForm.rpm.Text = Math.Round(e.TelemetryInfo.RPM.Value).ToString();
             }
             catch (Exception ex)
             {
@@ -142,7 +142,7 @@ namespace iRacingDash.Sessions
                     new Thread(() =>
                     {
                         Thread.Sleep(2000);
-                        lapTimeString = _wrapper.GetData("LapLastLapTime").ToString();
+                        lapTimeString = sessionWrapper.GetData("LapLastLapTime").ToString();
                         lapTime = Convert.ToDouble(lapTimeString);
 
                         lapCountPrevious = currentLap;
@@ -166,10 +166,10 @@ namespace iRacingDash.Sessions
                 trackLength = float.Parse(e.SessionInfo["WeekendInfo"]["TrackLength"].Value.Substring(0, 4)) * 1000;
 
                 var isMaxRpmValid = float.TryParse(e.SessionInfo["DriverInfo"]["DriverCarRedLine"].Value,
-                    out _dash.maxRpm);
+                    out sessionDash.maxRpm);
 
                 if (isMaxRpmValid)
-                    _dash.maxRpm = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarRedLine"].Value);
+                    sessionDash.maxRpm = float.Parse(e.SessionInfo["DriverInfo"]["DriverCarRedLine"].Value);
 
                 sessionType = e.SessionInfo["SessionInfo"]["Sessions"]["SessionNum", sessionNumber]["SessionType"].Value;
                 raceWeek = e.SessionInfo["WeekendInfo"]["RaceWeek"].Value;
@@ -198,11 +198,11 @@ namespace iRacingDash.Sessions
 
             #region Set Fuel level
             fuelLevel = e.TelemetryInfo.FuelLevel.Value;
-            dashForm.Fuel_remain_value.Text = string.Format("{0:00.00}", fuelLevel);
+            sessionForm.Fuel_remain_value.Text = string.Format("{0:00.00}", fuelLevel);
             #endregion
 
             #region EngineWarnings (Stalled engine)
-            dashForm.engine_panel.Visible = engineWarning == 30 || engineWarning == 14 ? true : false;
+            sessionForm.engine_panel.Visible = engineWarning == 30 || engineWarning == 14 ? true : false;
             #endregion
 
 
@@ -252,12 +252,12 @@ namespace iRacingDash.Sessions
 
             if (lapStartEndFuelDifference > 0)
             {
-                dashForm.Last_lap_value.Text = string.Format("{0:0.00}", lapStartEndFuelDifference);
-                dashForm.Last_lap_value.ForeColor = Color.FromArgb(255, 128, 0);
+                sessionForm.Last_lap_value.Text = string.Format("{0:0.00}", lapStartEndFuelDifference);
+                sessionForm.Last_lap_value.ForeColor = Color.FromArgb(255, 128, 0);
             }
             else
             {
-                dashForm.Last_lap_value.ForeColor = Color.Yellow;
+                sessionForm.Last_lap_value.ForeColor = Color.Yellow;
             }
 
             
@@ -283,26 +283,26 @@ namespace iRacingDash.Sessions
             switch (sessionFlags)
             {
                 case var t when t.HasFlag(SessionFlags.Repair):
-                    LightPanel(dashForm.warning_panel, Color.Black);
+                    LightPanel(sessionForm.warning_panel, Color.Black);
                     break;
                 case var t when t.HasFlag(SessionFlags.Blue):
-                    LightPanel(dashForm.warning_panel, Color.Blue);
+                    LightPanel(sessionForm.warning_panel, Color.Blue);
                     break;
                 case var t when t.HasFlag(SessionFlags.Yellow):
                 case var t1 when t1.HasFlag(SessionFlags.Caution):
                 case var t2 when t2.HasFlag(SessionFlags.CautionWaving):
                 case var t3 when t3.HasFlag(SessionFlags.YellowWaving):
-                    LightPanel(dashForm.warning_panel, Color.Yellow);
+                    LightPanel(sessionForm.warning_panel, Color.Yellow);
                     break;
                 case var t1 when t1.HasFlag(SessionFlags.GreenHeld):
                 case var t2 when t2.HasFlag(SessionFlags.OneLapToGreen):
-                    LightPanel(dashForm.warning_panel, Color.Green);
+                    LightPanel(sessionForm.warning_panel, Color.Green);
                     break;
                 case var t when t.HasFlag(SessionFlags.White):
-                    LightPanel(dashForm.warning_panel, Color.White);
+                    LightPanel(sessionForm.warning_panel, Color.White);
                     break;
                 default:
-                    dashForm.warning_panel.BackColor = Color.Transparent;
+                    sessionForm.warning_panel.BackColor = Color.Transparent;
                     break;
             }
         }

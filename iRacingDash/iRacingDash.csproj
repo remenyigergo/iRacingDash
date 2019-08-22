@@ -72,6 +72,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sessions\DefaultSession.cs" />
     <Compile Include="Sessions\OfflineTestingSession.cs" />
+    <Compile Include="Sessions\QualifySession.cs" />
+    <Compile Include="Sessions\PracticeSession.cs" />
     <Compile Include="Sessions\RaceSession.cs" />
     <Compile Include="Sessions\Session.cs" />
     <EmbeddedResource Include="Form1.resx">

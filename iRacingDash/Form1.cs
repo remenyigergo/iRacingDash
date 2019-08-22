@@ -95,7 +95,7 @@ namespace iRacingDash
         private int sessionNumberTemp = -1;
 
         private int subSessionNumber;
-        private int subSessionNumberTemp = -1;
+        //private int subSessionNumberTemp = -1;
 
         private float fuelLapStart = -1;
         private List<double> fuelUsagePerLap = new List<double>();
@@ -170,12 +170,19 @@ namespace iRacingDash
             switch (sessionTypeEnum)
             {
                 case SessionTypeEnum.OfflineTesting:
-                    _wrapper.TelemetryUpdated += new OfflineTestingSession(NonRTCalculationFPS, this, _wrapper, dash).OnTelemetryUpdated;
-                    _wrapper.SessionInfoUpdated += new OfflineTestingSession(NonRTCalculationFPS, this, _wrapper, dash).OnSessionInfoUpdated;
+                    var offlineTestingSession= new OfflineTestingSession(NonRTCalculationFPS, this, _wrapper, dash);
+                    _wrapper.TelemetryUpdated += offlineTestingSession.OnTelemetryUpdated;
+                    _wrapper.SessionInfoUpdated += offlineTestingSession.OnSessionInfoUpdated;
                     break;
                 case SessionTypeEnum.Practice:
+                    var practiceSession = new PracticeSession(NonRTCalculationFPS, this, _wrapper, dash);
+                    _wrapper.TelemetryUpdated += practiceSession.OnTelemetryUpdated;
+                    _wrapper.SessionInfoUpdated += practiceSession.OnSessionInfoUpdated;
                     break;
                 case SessionTypeEnum.Qualify:
+                    var qualifySession = new QualifySession(NonRTCalculationFPS, this, _wrapper, dash);
+                    _wrapper.TelemetryUpdated += qualifySession.OnTelemetryUpdated;
+                    _wrapper.SessionInfoUpdated += qualifySession.OnSessionInfoUpdated;
                     break;
                 case SessionTypeEnum.WarmUp:
                     break;

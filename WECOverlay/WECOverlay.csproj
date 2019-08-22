@@ -61,12 +61,6 @@
     <Compile Include="Logger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SetupCover.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SetupCover.Designer.cs">
-      <DependentUpon>SetupCover.cs</DependentUpon>
-    </Compile>
     <Compile Include="TransparentControl.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -89,9 +83,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="SetupCover.resx">
-      <DependentUpon>SetupCover.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Turn.resx">
       <DependentUpon>Turn.cs</DependentUpon>
     </EmbeddedResource>

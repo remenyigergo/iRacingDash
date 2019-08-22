@@ -14,7 +14,7 @@ namespace iRacingDash.Sessions
         private bool _raceStarted;
         private bool _raceFinished;
 
-        public RaceSession(int nonRtFps, Form1 form, SdkWrapper wrapper, Dash dash) : base(nonRtFps, form, wrapper, dash)
+        public RaceSession(int nonRtFps, Form1 form, SdkWrapper sessionWrapper, Dash sessionDash) : base(nonRtFps, form, sessionWrapper, sessionDash)
         {
             
         }
@@ -45,31 +45,31 @@ namespace iRacingDash.Sessions
             switch (sessionFlags)
             {
                 case var t when t.HasFlag(SessionFlags.Repair):
-                    LightPanel(dashForm.warning_panel, Color.Black);
+                    LightPanel(sessionForm.warning_panel, Color.Black);
                     break;
                 case var t when t.HasFlag(SessionFlags.Blue):
-                    LightPanel(dashForm.warning_panel, Color.Blue);
+                    LightPanel(sessionForm.warning_panel, Color.Blue);
                     break;
                 case var t when t.HasFlag(SessionFlags.Yellow):
                 case var t1 when t1.HasFlag(SessionFlags.Caution):
                 case var t2 when t2.HasFlag(SessionFlags.CautionWaving):
                 case var t3 when t3.HasFlag(SessionFlags.YellowWaving):
-                    LightPanel(dashForm.warning_panel, Color.Yellow);
+                    LightPanel(sessionForm.warning_panel, Color.Yellow);
                     break;
                 case var t when t.HasFlag(SessionFlags.Green):
                     raceStarted = true;
                     raceStartLap = currentLap;
-                    LightPanel(dashForm.warning_panel, Color.Green);
+                    LightPanel(sessionForm.warning_panel, Color.Green);
                     break;
                 case var t1 when t1.HasFlag(SessionFlags.GreenHeld):
                 case var t2 when t2.HasFlag(SessionFlags.OneLapToGreen):
-                    LightPanel(dashForm.warning_panel, Color.Green);
+                    LightPanel(sessionForm.warning_panel, Color.Green);
                     break;
                 case var t when t.HasFlag(SessionFlags.White):
-                    LightPanel(dashForm.warning_panel, Color.White);
+                    LightPanel(sessionForm.warning_panel, Color.White);
                     break;
                 default:
-                    dashForm.warning_panel.BackColor = Color.Transparent;
+                    sessionForm.warning_panel.BackColor = Color.Transparent;
                     break;
             }
         }

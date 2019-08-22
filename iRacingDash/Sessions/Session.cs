@@ -14,10 +14,10 @@ namespace iRacingDash.Sessions
     public abstract class Session
     {
         //SDK + dash
-        protected SdkWrapper _wrapper;
-        protected iRacingSDK _sdk;
-        protected Form1 dashForm;
-        protected Dash _dash;
+        protected SdkWrapper sessionWrapper;
+        protected iRacingSDK sessionSdk;
+        protected Form1 sessionForm;
+        protected Dash sessionDash;
 
         //Time
         private static DateTime now = DateTime.Now;
@@ -42,11 +42,15 @@ namespace iRacingDash.Sessions
         protected bool raceStarted;
         protected float raceStartLap;
 
+        //Laptimes
+        protected List<double> laptimes = new List<double>();
+
         //Fuel
         protected float fuelLapStart;
         protected float fuelLevel;
         protected bool initForFuel = true;
         protected float maxFuelOfCar = 0;
+        protected List<double> fuelUsagePerLap = new List<double>();
 
         //Engine
         protected int engineWarning;
@@ -82,7 +86,7 @@ namespace iRacingDash.Sessions
         protected string raceWeek;
         protected string eventType;
         protected string trackName;
-
+        protected bool isDriverInCar;
         
 
         //Settings on car
@@ -107,12 +111,12 @@ namespace iRacingDash.Sessions
 
 
 
-        public Session(int nonRtFps, Form1 form, SdkWrapper wrapper, Dash dash)
+        public Session(int _nonRtFps, Form1 _form, SdkWrapper _sessionWrapper, Dash _sessionDash)
         {
-            NonRTCalculationFPS = nonRtFps;
-            _wrapper = wrapper;
-            dashForm = form;
-            _dash = dash;
+            NonRTCalculationFPS = _nonRtFps;
+            sessionWrapper = _sessionWrapper;
+            sessionForm = _form;
+            sessionDash = _sessionDash;
         }
 
 
@@ -127,22 +131,20 @@ namespace iRacingDash.Sessions
         protected void WarningFlashes(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
             flashingFpsCounter = 0;
-            
-
 
             if (fuelLevel < 5)
-                dashForm.panel4.BackColor = Color.DarkRed;
+                sessionForm.panel4.BackColor = Color.DarkRed;
             else if (fuelLevel < 10)
-                LightPanel(dashForm.panel4, Color.DarkRed);
+                LightPanel(sessionForm.panel4, Color.DarkRed);
             else
-                dashForm.panel4.BackColor = Color.Transparent;
+                sessionForm.panel4.BackColor = Color.Transparent;
 
             if (engineWarning == 30 || engineWarning == 14)
             {
-                if (dashForm.engine_value.Visible)
-                    dashForm.engine_value.Visible = false;
+                if (sessionForm.engine_value.Visible)
+                    sessionForm.engine_value.Visible = false;
                 else
-                    dashForm.engine_value.Visible = true;
+                    sessionForm.engine_value.Visible = true;
             }
         }
 
@@ -162,9 +164,9 @@ namespace iRacingDash.Sessions
 
         protected void InPitsV2(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
-            engineWarning = Int32.Parse(_wrapper.GetData("EngineWarnings").ToString());
+            engineWarning = Int32.Parse(sessionWrapper.GetData("EngineWarnings").ToString());
 
-            var onPitRoad = Convert.ToBoolean(_wrapper.GetData("OnPitRoad"));
+            var onPitRoad = Convert.ToBoolean(sessionWrapper.GetData("OnPitRoad"));
             var ontrack = Convert.ToBoolean(e.TelemetryInfo.IsOnTrack.Value);
 
             if ((onPitRoad && initForFuel) || (ontrack && initForFuel))
@@ -172,15 +174,15 @@ namespace iRacingDash.Sessions
 
             if (engineWarning == 16 || engineWarning == 48) //16 = pit limiter
             {
-                dashForm.Pit_Limiter_title.Visible = onPitRoad ? true : false;
-                dashForm.speed_limiter.Visible = true;
-                dashForm.Pit_limiter_background_panel.Visible = true;
+                sessionForm.Pit_Limiter_title.Visible = onPitRoad ? true : false;
+                sessionForm.speed_limiter.Visible = true;
+                sessionForm.Pit_limiter_background_panel.Visible = true;
             }
             else
             {
-                dashForm.Pit_Limiter_title.Visible = onPitRoad ? true : false;
-                dashForm.Pit_Limiter_title.Visible = false;
-                dashForm.Pit_limiter_background_panel.Visible = false;
+                sessionForm.Pit_Limiter_title.Visible = onPitRoad ? true : false;
+                sessionForm.Pit_Limiter_title.Visible = false;
+                sessionForm.Pit_limiter_background_panel.Visible = false;
             }
         }
 
@@ -188,47 +190,47 @@ namespace iRacingDash.Sessions
         {
             gearValue = e.TelemetryInfo.Gear.Value;
             if (gearValue == -1)
-                dashForm.gear.Text = "R";
+                sessionForm.gear.Text = "R";
             else if (gearValue == 0)
-                dashForm.gear.Text = "N";
-            else dashForm.gear.Text = gearValue.ToString();
+                sessionForm.gear.Text = "N";
+            else sessionForm.gear.Text = gearValue.ToString();
         }
 
         protected void CalculateDeltaV2(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
-            var deltaObject = _wrapper.GetData("LapDeltaToSessionBestLap");
+            var deltaObject = sessionWrapper.GetData("LapDeltaToSessionBestLap");
             var deltaInt = Convert.ToDouble(deltaObject);
 
             if (deltaInt > 0 && deltaInt < 99.99)
             {
-                dashForm.delta_panel.BackColor = Color.Firebrick;
-                dashForm.Delta_value.Text = string.Format("{0:+0.00}", deltaInt);
+                sessionForm.delta_panel.BackColor = Color.Firebrick;
+                sessionForm.Delta_value.Text = string.Format("{0:+0.00}", deltaInt);
             }
             else if (deltaInt < 0 && deltaInt > -99.99)
             {
-                dashForm.delta_panel.BackColor = Color.Green;
-                dashForm.Delta_value.Text = string.Format("{0:0.00}", deltaInt);
+                sessionForm.delta_panel.BackColor = Color.Green;
+                sessionForm.Delta_value.Text = string.Format("{0:0.00}", deltaInt);
             }
             else if (deltaInt == 0)
             {
-                dashForm.delta_panel.BackColor = Color.FromArgb(255, 40, 40, 40);
-                dashForm.Delta_value.Text = string.Format("{0:0.00}", deltaInt);
+                sessionForm.delta_panel.BackColor = Color.FromArgb(255, 40, 40, 40);
+                sessionForm.Delta_value.Text = string.Format("{0:0.00}", deltaInt);
             }
             else if (deltaInt >= 99.99)
             {
-                dashForm.delta_panel.BackColor = Color.Firebrick;
-                dashForm.Delta_value.Text = "+99.99";
+                sessionForm.delta_panel.BackColor = Color.Firebrick;
+                sessionForm.Delta_value.Text = "+99.99";
             }
             else if (deltaInt <= -99.99)
             {
-                dashForm.delta_panel.BackColor = Color.Green;
-                dashForm.Delta_value.Text = "-99.99";
+                sessionForm.delta_panel.BackColor = Color.Green;
+                sessionForm.Delta_value.Text = "-99.99";
             }
         }
 
         protected void UpdateLapTimeV2(SdkWrapper.TelemetryUpdatedEventArgs e)
         {
-            var lapObject = _wrapper.GetData("LapCurrentLapTime");
+            var lapObject = sessionWrapper.GetData("LapCurrentLapTime");
             var lap = Convert.ToDouble(lapObject);
 
             int min = (int)(lap / 60);
@@ -243,7 +245,7 @@ namespace iRacingDash.Sessions
             //    ? string.Format("{0:00}:{1:00}.{2:000}", min, sec, decimalPart.ToString().Substring(2, decimalPartLength))
             //    : laptime = string.Format("{0:00}:{1:00}.{2:000}", 0, 0, 0);
 
-            dashForm.Laptime_value.Text = laptime;
+            sessionForm.Laptime_value.Text = laptime;
         }
 
 
@@ -256,32 +258,32 @@ namespace iRacingDash.Sessions
             {
                 if (!actualValue.Equals(valueTemp))
                 {
-                    if (_dash.settingLabelTitle.Visible == false)
+                    if (sessionDash.settingLabelTitle.Visible == false)
                         settingPanelFpsCounter = 0;
 
                     //panelek megjelenitése
-                    if (settingPanelFpsCounter <= (int)(_wrapper.TelemetryUpdateFrequency / settingPanelFps))
+                    if (settingPanelFpsCounter <= (int)(sessionWrapper.TelemetryUpdateFrequency / settingPanelFps))
                     {
-                        _dash.settingLabelTitle.Text = title;
+                        sessionDash.settingLabelTitle.Text = title;
                         if (actualValue.GetType() == typeof(float))
                         {
-                            _dash.settingLabelValue.Text = string.Format("{0:0.00}", actualValue);
+                            sessionDash.settingLabelValue.Text = string.Format("{0:0.00}", actualValue);
                         }
                         else
                         {
-                            _dash.settingLabelValue.Text = actualValue.ToString();
+                            sessionDash.settingLabelValue.Text = actualValue.ToString();
                         }
 
 
                         //settingsPanel.Visible = true;
-                        _dash.settingLabelTitle.Visible = true;
-                        _dash.settingLabelValue.Visible = true;
+                        sessionDash.settingLabelTitle.Visible = true;
+                        sessionDash.settingLabelValue.Visible = true;
                     }
                     else
                     {
                         //settingsPanel.Visible = false;
-                        _dash.settingLabelTitle.Visible = false;
-                        _dash.settingLabelValue.Visible = false;
+                        sessionDash.settingLabelTitle.Visible = false;
+                        sessionDash.settingLabelValue.Visible = false;
                         settingPanelFpsCounter = 0;
                         valueTemp = actualValue;
                     }
@@ -289,11 +291,27 @@ namespace iRacingDash.Sessions
             }
             catch (Exception ex)
             {
-                _dash.settingLabelTitle.Text = title;
-                _dash.settingLabelValue.Text = "N/A";
+                sessionDash.settingLabelTitle.Text = title;
+                sessionDash.settingLabelValue.Text = "N/A";
             }
 
             #endregion
+        }
+
+        // Or IsNanOrInfinity
+        protected bool HasValue(double value)
+        {
+            return !Double.IsNaN(value) && !Double.IsInfinity(value);
+        }
+
+        protected double GetAverageFromList(List<double> list)
+        {
+            var max = 0.0d;
+            foreach (var value in list)
+            {
+                max += value;
+            }
+            return max / list.Count;
         }
     }
 }
